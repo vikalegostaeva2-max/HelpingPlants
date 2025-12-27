@@ -239,7 +239,178 @@
                         <a href="#" class="footer-link">API для разработчиков</a>
                         <a href="#" class="footer-link">Точность распознавания</a>
                     </div>
+                    <!-- Умная грядка -->
+<section class="garden-section" id="garden-section">
+    <div class="container">
+        <h2 class="section-title">Моя умная грядка</h2>
+        <p class="section-subtitle">Отслеживайте условия растений в реальном времени</p>
+        
+        <div class="garden-dashboard">
+            <!-- Статистика -->
+            <div class="garden-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="tempValue">24°C</h3>
+                        <p class="stat-label">Температура</p>
+                        <div class="stat-status status-optimal">
+                            <i class="fas fa-check-circle"></i> Оптимально
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="humidityValue">65%</h3>
+                        <p class="stat-label">Влажность почвы</p>
+                        <div class="stat-status status-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Требуется полив
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="lightValue">850</h3>
+                        <p class="stat-label">Освещённость (lux)</p>
+                        <div class="stat-status status-good">
+                            <i class="fas fa-check-circle"></i> Хорошо
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-wind"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="phValue">6.5</h3>
+                        <p class="stat-label">Кислотность pH</p>
+                        <div class="stat-status status-optimal">
+                            <i class="fas fa-check-circle"></i> Норма
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Графики -->
+            <div class="garden-charts">
+                <div class="chart-container">
+                    <h3 class="chart-title">Температура за 7 дней</h3>
+                    <canvas id="tempChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="chart-title">Влажность почвы</h3>
+                    <canvas id="humidityChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Рекомендации -->
+            <div class="garden-recommendations">
+                <h3 class="recommendations-title">
+                    <i class="fas fa-robot"></i> Рекомендации AI
+                </h3>
+                <div class="recommendations-list">
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4>Требуется полив</h4>
+                            <p>Влажность почвы опустилась ниже 70%. Рекомендуем полить растения через 2 часа.</p>
+                            <span class="recommendation-time">
+                                <i class="far fa-clock"></i> 14:30 - 15:00
+                            </span>
+                        </div>
+                    </div>
                     
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4>Контроль температуры</h4>
+                            <p>Вечером ожидается похолодание до 18°C. Рекомендуем закрыть окна.</p>
+                            <span class="recommendation-time">
+                                <i class="far fa-clock"></i> 18:00 - 20:00
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4>Досветка растений</h4>
+                            <p>Завтра будет пасмурно. Включите фитолампы с 10:00 до 16:00.</p>
+                            <span class="recommendation-time">
+                                <i class="far fa-clock"></i> Завтра, 10:00 - 16:00
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-full" id="updateGardenData">
+                    <i class="fas fa-sync-alt"></i> Обновить данные с датчиков
+                </button>
+            </div>
+        </div>
+        
+        <!-- Добавление новой грядки -->
+        <div class="add-garden">
+            <h3>Добавить новую умную грядку</h3>
+            <p>Подключите датчики и начните отслеживать условия растений</p>
+            
+            <div class="add-garden-form">
+                <div class="form-group">
+                    <label for="gardenName">
+                        <i class="fas fa-seedling"></i> Название грядки
+                    </label>
+                    <input type="text" id="gardenName" placeholder="Например: Окно на кухне">
+                </div>
+                
+                <div class="form-group">
+                    <label for="gardenPlants">
+                        <i class="fas fa-leaf"></i> Растения на грядке
+                    </label>
+                    <select id="gardenPlants" multiple>
+                        <option value="tomato">Помидоры</option>
+                        <option value="basil">Базилик</option>
+                        <option value="lettuce">Салат</option>
+                        <option value="pepper">Перец</option>
+                        <option value="herbs">Пряные травы</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sensors">
+                        <i class="fas fa-microchip"></i> Датчики
+                    </label>
+                    <div class="sensors-checkboxes">
+                        <label><input type="checkbox" name="sensor" value="temperature" checked> Температура</label>
+                        <label><input type="checkbox" name="sensor" value="humidity" checked> Влажность почвы</label>
+                        <label><input type="checkbox" name="sensor" value="light"> Освещённость</label>
+                        <label><input type="checkbox" name="sensor" value="ph"> Кислотность pH</label>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-large" id="createGarden">
+                    <i class="fas fa-plus-circle"></i> Создать умную грядку
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
                     <div class="footer-column">
                         <h4 class="footer-column-title">Поддержка</h4>
                         <a href="#" class="footer-link">FAQ</a>
