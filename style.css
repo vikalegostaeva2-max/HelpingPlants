@@ -521,3 +521,16 @@ body {
         padding: 30px 20px;
     }
 }
+/* Исправление для фото растений */
+.plant-image {
+    height: 200px;
+    background-color: transparent !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Плавная прокрутка */
+html {
+    scroll-behavior: smooth;
+}
