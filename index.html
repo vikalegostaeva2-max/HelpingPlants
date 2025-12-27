@@ -21,8 +21,8 @@
                 </div>
                 <nav class="nav">
                     <a href="#" class="nav-link active">Главная</a>
-                    <a href="#" class="nav-link">Советы</a>
-                    <a href="#" class="nav-link">Растения</a>
+                    <a href="#tips-section" class="nav-link">Советы</a>
+                    <a href="#plants-section" class="nav-link">Растения</a>
                 </nav>
                 <button class="menu-toggle">
                     <i class="fas fa-bars"></i>
@@ -31,22 +31,22 @@
         </div>
     </header>
 
-    <!-- Главный баннер -->
-<section class="hero" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1545243421-89e5c9b6d12c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+    <!-- Главный баннер с растениями в горшках -->
+    <section class="hero" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
         <div class="container">
             <div class="hero-content">
                 <h1 class="hero-title">Любите свои растения — они ответят вам взаимностью</h1>
                 <p class="hero-subtitle">Простые советы по уходу и рекомендации по выращиванию</p>
                 <div class="hero-buttons">
-                    <a href="#" class="btn btn-primary">Начать уход</a>
-                    <a href="#" class="btn btn-secondary">Узнать больше</a>
+                    <a href="#tips-section" class="btn btn-primary">Начать уход</a>
+                    <a href="#plants-section" class="btn btn-secondary">Узнать больше</a>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Советы по уходу -->
-    <section class="tips-section">
+    <section class="tips-section" id="tips-section">
         <div class="container">
             <h2 class="section-title">Основные правила ухода</h2>
             <p class="section-subtitle">Следуйте этим простым советам для здоровых и красивых растений</p>
@@ -88,51 +88,44 @@
     </section>
 
     <!-- Популярные растения -->
-    <section class="plants-section">
+    <section class="plants-section" id="plants-section">
         <div class="container">
             <h2 class="section-title">Популярные комнатные растения</h2>
             <p class="section-subtitle">Идеальные растения для начинающих садоводов</p>
             
             <div class="plants-grid">
                 <div class="plant-card">
+                    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1485955900006-10f4d324d411?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
+                    <div class="plant-info">
+                        <h3 class="plant-name">Сансевиерия</h3>
+                        <p class="plant-desc">Неприхотливое растение, которое очищает воздух. Выживает даже при слабом освещении.</p>
+                        <div class="plant-tags">
+                            <span class="plant-tag">Для новичков</span>
+                            <span class="plant-tag">Очищает воздух</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="plant-card">
-    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1485955900006-10f4d324d411?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center;"></div>
-    <div class="plant-info">
-        <h3 class="plant-name">Сансевиерия</h3>
-        <p class="plant-desc">Неприхотливое растение, которое очищает воздух. Выживает даже при слабом освещении.</p>
-        <div class="plant-tags">
-            <span class="plant-tag">Для новичков</span>
-            <span class="plant-tag">Очищает воздух</span>
-        </div>
-    </div>
-</div>
-
-<div class="plant-card">
-    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1593482892290-5d188b23f310?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center;"></div>
-    <div class="plant-info">
-        <h3 class="plant-name">Замиокулькас</h3>
-        <p class="plant-desc">Растение, которое не требует частого полива. Идеально для забывчивых хозяев.</p>
-        <div class="plant-tags">
-            <span class="plant-tag">Неприхотливый</span>
-            <span class="plant-tag">Мало воды</span>
-        </div>
-    </div>
-</div>
-
-<div class="plant-card">
-    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1595515112648-bd6c3d6f26e6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center;"></div>
-    <div class="plant-info">
-        <h3 class="plant-name">Фикус Бенджамина</h3>
-        <p class="plant-desc">Красивое дерево, которое любит свет и умеренный полив. Символ уюта в доме.</p>
-        <div class="plant-tags">
-            <span class="plant-tag">Декоративный</span>
-            <span class="plant-tag">Любит свет</span>
-        </div>
-    </div>
-</div>
-        </div>
-    </div>
-</div>
+                    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1593482892290-5d188b23f310?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
+                    <div class="plant-info">
+                        <h3 class="plant-name">Замиокулькас</h3>
+                        <p class="plant-desc">Растение, которое не требует частого полива. Идеально для забывчивых хозяев.</p>
+                        <div class="plant-tags">
+                            <span class="plant-tag">Неприхотливый</span>
+                            <span class="plant-tag">Мало воды</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="plant-card">
+                    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1595515112648-bd6c3d6f26e6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
+                    <div class="plant-info">
+                        <h3 class="plant-name">Фикус Бенджамина</h3>
+                        <p class="plant-desc">Красивое дерево, которое любит свет и умеренный полив. Символ уюта в доме.</p>
+                        <div class="plant-tags">
+                            <span class="plant-tag">Декоративный</span>
+                            <span class="plant-tag">Любит свет</span>
                         </div>
                     </div>
                 </div>
@@ -166,7 +159,11 @@
                     </div>
                 </div>
                 
-
+                <div class="cta-box">
+                    <h3 class="cta-title">Остались вопросы?</h3>
+                    <p class="cta-text">Присоединяйтесь к нашему Telegram-чату, где тысячи любителей растений делятся опытом.</p>
+                    <a href="https://t.me/plants_care_community" target="_blank" class="btn btn-primary btn-large">
+                        <i class="fab fa-telegram"></i> Вступить в сообщество
                     </a>
                 </div>
             </div>
@@ -180,13 +177,31 @@
                 <div class="footer-logo">
                     <i class="fas fa-leaf"></i>
                     <span>HelpingPlants</span>
-                    <p class="footer-tagline">Помогаем выращивать с любовью </p>
+                    <p class="footer-tagline">Помогаем выращивать с любовью с 2025 года</p>
                 </div>
-
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-column-title">О проекте</h4>
+                        <a href="#" class="footer-link">Наша миссия</a>
+                        <a href="#" class="footer-link">Блог</a>
+                    </div>
                     
-
+                    <div class="footer-column">
+                        <h4 class="footer-column-title">Помощь</h4>
+                        <a href="#" class="footer-link">Частые вопросы</a>
+                        <a href="#" class="footer-link">Контакты</a>
+                    </div>
+                </div>
+            </div>
+            
             <div class="footer-bottom">
-                <p class="copyright">© 2025 HelpingPlants.</p>
+                <p class="copyright">© 2025 HelpingPlants. Все права защищены.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                </div>
             </div>
         </div>
     </footer>
@@ -195,6 +210,23 @@
         // Простой скрипт для мобильного меню
         document.querySelector('.menu-toggle').addEventListener('click', function() {
             document.querySelector('.nav').classList.toggle('active');
+        });
+        
+        // Плавная прокрутка для якорных ссылок
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
         });
     </script>
 </body>
