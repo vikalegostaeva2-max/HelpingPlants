@@ -1,527 +1,279 @@
-/* ===== ОСНОВНЫЕ СТИЛИ ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* ===== НОВЫЕ СТИЛИ ДЛЯ AI ФУНКЦИОНАЛА ===== */
 
-body {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
-    color: #333;
+/* Секция AI */
+.ai-section {
+    padding: 100px 0;
     background-color: #f9fbf9;
 }
 
-.container {
-    max-width: 1200px;
+.upload-area {
+    max-width: 800px;
     margin: 0 auto;
-    padding: 0 20px;
 }
 
-/* ===== ШАПКА ===== */
-.header {
-    background-color: white;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 0;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2e7d32;
-}
-
-.logo i {
-    font-size: 1.8rem;
-}
-
-.nav {
-    display: flex;
-    gap: 30px;
-}
-
-.nav-link {
-    text-decoration: none;
-    color: #555;
-    font-weight: 500;
-    transition: color 0.3s;
-    padding: 8px 0;
-    position: relative;
-}
-
-.nav-link:hover {
-    color: #2e7d32;
-}
-
-.nav-link.active {
-    color: #2e7d32;
-}
-
-.nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: #2e7d32;
-    border-radius: 3px;
-}
-
-.menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #2e7d32;
+.upload-box {
+    background: white;
+    border: 3px dashed #c8e6c9;
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    transition: all 0.3s;
     cursor: pointer;
 }
 
-/* ===== ГЛАВНЫЙ БАННЕР ===== */
-.hero {
-    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-    padding: 100px 0;
-    text-align: center;
+.upload-box:hover {
+    border-color: #4CAF50;
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(76, 175, 80, 0.1);
 }
 
-.hero-title {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #1b5e20;
-    margin-bottom: 20px;
-    line-height: 1.2;
-}
-
-.hero-subtitle {
-    font-size: 1.2rem;
-    color: #555;
-    max-width: 700px;
-    margin: 0 auto 40px;
-}
-
-.hero-buttons {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn {
-    padding: 14px 32px;
-    border-radius: 50px;
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s;
-    border: 2px solid transparent;
-}
-
-.btn-primary {
-    background-color: #2e7d32;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #1b5e20;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(46, 125, 50, 0.2);
-}
-
-.btn-secondary {
-    background-color: transparent;
-    color: #2e7d32;
-    border-color: #2e7d32;
-}
-
-.btn-secondary:hover {
+.upload-box.dragover {
+    border-color: #4CAF50;
     background-color: #e8f5e9;
-    transform: translateY(-3px);
 }
 
-.btn-large {
-    padding: 16px 40px;
-    font-size: 1.1rem;
+.upload-icon {
+    font-size: 4rem;
+    color: #4CAF50;
+    margin-bottom: 20px;
 }
 
-.btn-large i {
-    margin-right: 10px;
+.upload-title {
+    font-size: 1.8rem;
+    color: #2e7d32;
+    margin-bottom: 10px;
 }
 
-/* ===== РАЗДЕЛЫ ===== */
-.section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #1b5e20;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-.section-subtitle {
-    font-size: 1.1rem;
+.upload-subtitle {
     color: #666;
-    text-align: center;
-    max-width: 700px;
-    margin: 0 auto 60px;
+    margin-bottom: 30px;
 }
 
-.tips-section,
-.plants-section,
-.start-section {
-    padding: 100px 0;
-}
-
-.tips-section {
-    background-color: white;
-}
-
-.plants-section {
-    background-color: #f9fbf9;
-}
-
-/* ===== СОВЕТЫ ===== */
-.tips-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
-
-.tip-card {
+/* Результат распознавания */
+.result-box {
     background: white;
-    border-radius: 15px;
+    border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s, box-shadow 0.3s;
-    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
 }
 
-.tip-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-}
-
-.tip-icon {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
-    border-radius: 50%;
+.result-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e8f5e9;
+}
+
+.result-title {
     font-size: 1.8rem;
     color: #1b5e20;
 }
 
-.tip-title {
-    font-size: 1.4rem;
+.result-accuracy {
+    background: #e8f5e9;
     color: #2e7d32;
-    margin-bottom: 15px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
 }
 
-.tip-text {
-    color: #666;
-    line-height: 1.7;
-}
-
-/* ===== РАСТЕНИЯ ===== */
-.plants-grid {
+.result-content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
+    grid-template-columns: 1fr 2fr;
+    gap: 40px;
 }
 
-.plant-card {
-    background: white;
+.result-image {
     border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s;
+    height: 300px;
 }
 
-.plant-card:hover {
-    transform: translateY(-10px);
+.result-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.plant-image {
-    height: 200px;
-    background-color: #c8e6c9;
+.result-info {
+    padding: 10px 0;
 }
 
-.plant-info {
-    padding: 25px;
-}
-
-.plant-name {
-    font-size: 1.4rem;
-    color: #1b5e20;
-    margin-bottom: 10px;
-}
-
-.plant-desc {
+.plant-latin {
     color: #666;
+    font-style: italic;
     margin-bottom: 20px;
-    line-height: 1.6;
 }
 
-.plant-tags {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+.care-tips {
+    background: #f9fbf9;
+    padding: 20px;
+    border-radius: 15px;
+    margin: 25px 0;
 }
 
-.plant-tag {
-    background-color: #e8f5e9;
+.care-tips h5 {
     color: #2e7d32;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
 }
 
-/* ===== КАК НАЧАТЬ ===== */
+.care-tips ul {
+    list-style: none;
+    padding: 0;
+}
+
+.care-tips li {
+    margin-bottom: 12px;
+    padding-left: 30px;
+    position: relative;
+}
+
+.care-tips li i {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    color: #4CAF50;
+}
+
+/* Как это работает */
+.how-it-works {
+    padding: 100px 0;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+
 .steps {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 40px;
-    margin: 60px 0;
+    margin-top: 60px;
 }
 
-.step {
-    text-align: center;
-}
-
-.step-number {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
-    color: #1b5e20;
+.step-icon {
+    width: 80px;
+    height: 80px;
+    background: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 700;
     margin: 0 auto 20px;
-}
-
-.step-title {
-    font-size: 1.3rem;
+    font-size: 2rem;
     color: #2e7d32;
-    margin-bottom: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .step-text {
-    color: #666;
-    line-height: 1.6;
-}
-
-.cta-box {
-    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-    border-radius: 20px;
-    padding: 50px;
-    text-align: center;
-    margin-top: 60px;
-}
-
-.cta-title {
-    font-size: 2rem;
-    color: #1b5e20;
-    margin-bottom: 15px;
-}
-
-.cta-text {
-    font-size: 1.1rem;
     color: #555;
-    max-width: 700px;
-    margin: 0 auto 30px;
-}
-
-/* ===== ПОДВАЛ ===== */
-.footer {
-    background-color: #1b5e20;
-    color: white;
-    padding: 60px 0 30px;
-}
-
-.footer-content {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 60px;
-    margin-bottom: 50px;
-}
-
-.footer-logo {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.footer-logo i {
-    font-size: 2.5rem;
-    color: #a5d6a7;
-}
-
-.footer-logo span {
-    font-size: 1.8rem;
-    font-weight: 700;
-}
-
-.footer-tagline {
-    color: #c8e6c9;
     line-height: 1.6;
 }
 
-.footer-links {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
+/* История */
+.history-section {
+    padding: 100px 0;
+    background-color: white;
 }
 
-.footer-column-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #a5d6a7;
+.history-empty {
+    text-align: center;
+    padding: 60px 40px;
+    background: #f9fbf9;
+    border-radius: 20px;
+    border: 2px dashed #c8e6c9;
 }
 
-.footer-link {
-    display: block;
-    color: #e8f5e9;
-    text-decoration: none;
-    margin-bottom: 12px;
-    transition: color 0.3s;
-}
-
-.footer-link:hover {
-    color: white;
-}
-
-.footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.copyright {
+.empty-icon {
+    font-size: 4rem;
     color: #c8e6c9;
+    margin-bottom: 20px;
 }
 
-.social-links {
+.history-empty h3 {
+    color: #2e7d32;
+    margin-bottom: 10px;
+}
+
+.history-empty p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.history-item {
     display: flex;
-    gap: 20px;
+    align-items: center;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
 }
 
-.social-link {
-    color: white;
-    font-size: 1.3rem;
-    transition: color 0.3s;
+.history-item:hover {
+    transform: translateY(-5px);
 }
 
-.social-link:hover {
-    color: #a5d6a7;
+.history-item-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-right: 20px;
 }
 
-/* ===== АДАПТИВНОСТЬ ===== */
-@media (max-width: 992px) {
-    .hero-title {
-        font-size: 2.5rem;
-    }
-    
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 40px;
-    }
+.history-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-@media (max-width: 768px) {
-    .nav {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background: white;
-        flex-direction: column;
-        padding: 20px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    .nav.active {
-        display: flex;
-    }
-    
-    .menu-toggle {
-        display: block;
-    }
-    
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .section-title {
-        font-size: 2rem;
-    }
-    
-    .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn {
-        width: 100%;
-        max-width: 300px;
-        text-align: center;
-    }
-    
-    .footer-links {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-    
-    .footer-bottom {
-        flex-direction: column;
-        text-align: center;
-    }
+.history-item-info {
+    flex: 1;
 }
 
-@media (max-width: 480px) {
-    .hero-title {
-        font-size: 1.8rem;
-    }
-    
-    .section-title {
-        font-size: 1.8rem;
-    }
-    
-    .tips-grid,
-    .plants-grid,
-    .steps {
-        grid-template-columns: 1fr;
-    }
-    
-    .cta-box {
-        padding: 30px 20px;
-    }
+.history-item-info h4 {
+    color: #1b5e20;
+    margin-bottom: 5px;
 }
-/* Исправление для фото растений */
+
+.history-item-info p {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.history-item-tags {
+    display: flex;
+    gap: 10px;
+}
+
+.history-tag {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+
+.history-item-delete {
+    background: none;
+    border: none;
+    color: #f44336;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.history-item-delete:hover {
+    background: #ffebee;
+}
+
+/* ===== ИСПРАВЛЕНИЕ ДЛЯ КАРТИНОК РАСТЕНИЙ ===== */
 .plant-image {
     height: 200px;
     background-color: transparent !important;
@@ -533,4 +285,30 @@ body {
 /* Плавная прокрутка */
 html {
     scroll-behavior: smooth;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .result-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .result-image {
+        height: 200px;
+    }
+    
+    .history-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .history-item-image {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .steps {
+        grid-template-columns: 1fr;
+    }
 }
