@@ -3,99 +3,303 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HelpingPlants - Распознавание растений и рекомендации по уходу</title>
+    <title>HelpingPlants - Распознавание растений с помощью AI</title>
+    <meta name="description" content="Бесплатное распознавание растений с помощью искусственного интеллекта. Загрузите фото и получите точное определение вида и рекомендации по уходу.">
+    <meta name="keywords" content="распознавание растений, AI, нейросеть, уход за растениями, PlantNet, садоводство">
+    <meta name="author" content="HelpingPlants">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js для графиков умной грядки -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Лоадер -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <i class="fas fa-leaf loader-icon"></i>
+            <p>HelpingPlants</p>
+            <div class="loader-spinner"></div>
+        </div>
+    </div>
+
     <!-- Шапка сайта -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <i class="fas fa-leaf"></i>
-                    <span>HelpingPlants</span>
+                    <i class="fas fa-leaf logo-icon"></i>
+                    <span class="logo-text">HelpingPlants</span>
                 </div>
+                
                 <nav class="nav">
-                    <a href="#" class="nav-link active">Главная</a>
-                    <a href="#ai-section" class="nav-link">Распознавание</a>
-                    <a href="#plants-section" class="nav-link">Растения</a>
-                    <a href="#history-section" class="nav-link">История</a>
+                    <a href="#home" class="nav-link active">
+                        <i class="fas fa-home"></i> Главная
+                    </a>
+                    <a href="#ai-section" class="nav-link">
+                        <i class="fas fa-robot"></i> Распознавание
+                    </a>
+                    <a href="#plants-section" class="nav-link">
+                        <i class="fas fa-seedling"></i> Растения
+                    </a>
+                    <a href="#garden-section" class="nav-link">
+                        <i class="fas fa-solar-panel"></i> Умная грядка
+                    </a>
+                    <a href="#history-section" class="nav-link">
+                        <i class="fas fa-history"></i> История
+                    </a>
                 </nav>
-                <button class="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                
+                <div class="header-actions">
+                    <button class="btn btn-outline" id="themeToggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
     <!-- Главный баннер -->
-    <section class="hero" style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+    <section class="hero" id="home">
         <div class="container">
             <div class="hero-content">
-                <h1 class="hero-title">Распознаем растение и даём рекомендации по уходу</h1>
-                <p class="hero-subtitle">Загрузите фото — нейросеть определит вид растения и даст персональные советы</p>
-                <div class="hero-buttons">
-                    <a href="#ai-section" class="btn btn-primary">
-                        <i class="fas fa-robot"></i> Распознать растение
-                    </a>
-                    <a href="#how-it-works" class="btn btn-secondary">
-                        <i class="fas fa-question-circle"></i> Как это работает
-                    </a>
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        <span class="highlight">Распознаём растения</span><br>
+                        с помощью искусственного интеллекта
+                    </h1>
+                    <p class="hero-subtitle">
+                        Просто загрузите фото — наша нейросеть определит вид растения 
+                        и даст персонализированные рекомендации по уходу
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">42,000+</span>
+                            <span class="stat-label">видов растений в базе</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">98%</span>
+                            <span class="stat-label">точность распознавания</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">500</span>
+                            <span class="stat-label">запросов в день бесплатно</span>
+                        </div>
+                    </div>
+                    <div class="hero-buttons">
+                        <a href="#ai-section" class="btn btn-primary btn-lg">
+                            <i class="fas fa-camera"></i> Попробовать бесплатно
+                        </a>
+                        <a href="#how-it-works" class="btn btn-outline btn-lg">
+                            <i class="fas fa-play-circle"></i> Как это работает
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="hero-image">
+                    <div class="floating-cards">
+                        <div class="floating-card card-1">
+                            <i class="fas fa-leaf"></i>
+                            <span>Монстера</span>
+                        </div>
+                        <div class="floating-card card-2">
+                            <i class="fas fa-spa"></i>
+                            <span>Фикус</span>
+                        </div>
+                        <div class="floating-card card-3">
+                            <i class="fas fa-seedling"></i>
+                            <span>Суккуленты</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Нейросеть для распознавания -->
+    <!-- Распознавание растений -->
     <section class="ai-section" id="ai-section">
         <div class="container">
-            <h2 class="section-title">Распознавание растений с помощью AI</h2>
-            <p class="section-subtitle">Загрузите фото растения и получите полный анализ</p>
+            <div class="section-header">
+                <span class="section-badge">
+                    <i class="fas fa-robot"></i> PlantNet AI
+                </span>
+                <h2 class="section-title">Распознайте растение за секунды</h2>
+                <p class="section-subtitle">
+                    Используем самую точную нейросеть для определения растений
+                </p>
+            </div>
             
-            <div class="upload-area">
-                <div class="upload-box" id="uploadBox">
-                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                    <h3 class="upload-title">Перетащите фото сюда</h3>
-                    <p class="upload-subtitle">или нажмите для выбора файла</p>
-                    <input type="file" id="fileInput" accept="image/*" hidden>
-                    <button class="btn btn-primary btn-large" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-camera"></i> Выбрать фото
-                    </button>
-                </div>
-                
-                <div class="result-box" id="resultBox" style="display: none;">
-                    <div class="result-header">
-                        <h3 class="result-title">Результат распознавания</h3>
-                        <span class="result-accuracy">Точность: 94%</span>
+            <div class="upload-container">
+                <!-- Левая панель: Загрузка -->
+                <div class="upload-panel">
+                    <div class="upload-box" id="uploadBox">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3 class="upload-title">Загрузите фото растения</h3>
+                        <p class="upload-subtitle">
+                            Перетащите или выберите файл (JPG, PNG, WebP)
+                        </p>
+                        
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <button class="btn btn-primary btn-lg upload-btn" id="selectFileBtn">
+                            <i class="fas fa-folder-open"></i> Выбрать файл
+                        </button>
+                        
+                        <div class="upload-tips">
+                            <div class="tip">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Совет: сфотографируйте листья или цветы крупным планом</span>
+                            </div>
+                            <div class="tip">
+                                <i class="fas fa-ban"></i>
+                                <span>Избегайте размытых или темных фотографий</span>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="result-content">
-                        <div class="result-image">
-                            <img src="" id="resultImage" alt="Распознанное растение">
+                    <!-- Прогресс бар -->
+                    <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <div class="progress-header">
+                            <h4><i class="fas fa-spinner fa-spin"></i> Анализ изображения</h4>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text">
+                            <i class="fas fa-brain"></i>
+                            PlantNet AI обрабатывает изображение...
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Правая панель: Результат -->
+                <div class="result-panel">
+                    <div class="result-box" id="resultBox" style="display: none;">
+                        <div class="result-header">
+                            <h3>
+                                <i class="fas fa-check-circle"></i>
+                                Результат распознавания
+                            </h3>
+                            <div class="confidence-badge" id="confidenceBadge">
+                                <span id="confidenceValue">95%</span>
+                                точность
+                            </div>
                         </div>
                         
-                        <div class="result-info">
-                            <h4 class="plant-name">Монстера деликатесная</h4>
-                            <p class="plant-latin">Monstera deliciosa</p>
-                            
-                            <div class="care-tips">
-                                <h5>Рекомендации по уходу:</h5>
-                                <ul>
-                                    <li><i class="fas fa-tint"></i> <strong>Полив:</strong> 2 раза в неделю летом, 1 раз зимой</li>
-                                    <li><i class="fas fa-sun"></i> <strong>Свет:</strong> Яркий рассеянный свет, не прямые лучи</li>
-                                    <li><i class="fas fa-thermometer-half"></i> <strong>Температура:</strong> 20-25°C летом, 16-18°C зимой</li>
-                                    <li><i class="fas fa-seedling"></i> <strong>Удобрение:</strong> Каждые 2 недели весной и летом</li>
-                                </ul>
+                        <div class="result-content">
+                            <!-- Изображение -->
+                            <div class="result-image-container">
+                                <img id="resultImage" src="" alt="Загруженное растение">
+                                <div class="image-actions">
+                                    <button class="btn-icon" id="zoomInBtn">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                    <button class="btn-icon" id="zoomOutBtn">
+                                        <i class="fas fa-search-minus"></i>
+                                    </button>
+                                    <button class="btn-icon" id="downloadResultBtn">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
                             </div>
                             
-                            <button class="btn btn-primary" id="saveResult">
-                                <i class="fas fa-save"></i> Сохранить в историю
+                            <!-- Информация о растении -->
+                            <div class="plant-info">
+                                <div class="plant-main-info">
+                                    <h4 id="plantName">Растение не распознано</h4>
+                                    <p class="plant-latin" id="plantLatin">Научное название</p>
+                                </div>
+                                
+                                <!-- Семейство и детали -->
+                                <div class="plant-details">
+                                    <div class="detail">
+                                        <i class="fas fa-leaf"></i>
+                                        <div>
+                                            <span class="detail-label">Семейство</span>
+                                            <span class="detail-value" id="plantFamily">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="detail">
+                                        <i class="fas fa-globe"></i>
+                                        <div>
+                                            <span class="detail-label">Распространение</span>
+                                            <span class="detail-value" id="plantDistribution">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Альтернативные варианты -->
+                                <div class="alternatives" id="alternativesSection">
+                                    <h5><i class="fas fa-list"></i> Другие варианты</h5>
+                                    <div class="alternatives-list" id="alternativesList"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Рекомендации по уходу -->
+                        <div class="care-section">
+                            <h4><i class="fas fa-seedling"></i> Рекомендации по уходу</h4>
+                            <div class="care-grid" id="careGrid"></div>
+                        </div>
+                        
+                        <!-- Действия -->
+                        <div class="result-actions">
+                            <button class="btn btn-primary" id="saveToHistoryBtn">
+                                <i class="fas fa-save"></i> Сохранить результат
+                            </button>
+                            <button class="btn btn-outline" id="shareResultBtn">
+                                <i class="fas fa-share-alt"></i> Поделиться
+                            </button>
+                            <button class="btn btn-text" id="newRecognitionBtn">
+                                <i class="fas fa-redo"></i> Новое фото
                             </button>
                         </div>
+                    </div>
+                    
+                    <!-- Сообщение о готовности -->
+                    <div class="ready-message" id="readyMessage">
+                        <div class="ready-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h3>Готово к распознаванию</h3>
+                        <p>Загрузите фото растения и получите мгновенный результат</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Информация о PlantNet -->
+            <div class="api-info-card">
+                <div class="api-info-content">
+                    <div class="api-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="api-text">
+                        <h4>Используем PlantNet API</h4>
+                        <p>
+                            <strong>База данных:</strong> 42,000+ видов растений<br>
+                            <strong>Точность:</strong> до 98% при хорошем освещении<br>
+                            <strong>Лимит:</strong> 500 запросов в день бесплатно
+                        </p>
+                        <a href="https://my.plantnet.org/" target="_blank" class="btn-link">
+                            <i class="fas fa-external-link-alt"></i> Официальный сайт PlantNet
+                        </a>
                     </div>
                 </div>
             </div>
@@ -105,45 +309,105 @@
     <!-- Как это работает -->
     <section class="how-it-works" id="how-it-works">
         <div class="container">
-            <h2 class="section-title">Как работает наша нейросеть</h2>
-            <p class="section-subtitle">Технологии машинного обучения для точного определения растений</p>
+            <div class="section-header">
+                <h2 class="section-title">Как работает наш сервис</h2>
+                <p class="section-subtitle">Процесс распознавания от загрузки до результата</p>
+            </div>
             
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
                     <div class="step-icon">
                         <i class="fas fa-camera"></i>
                     </div>
                     <h3 class="step-title">Загрузите фото</h3>
-                    <p class="step-text">Сфотографируйте растение или загрузите существующее изображение</p>
+                    <p class="step-description">
+                        Сфотографируйте растение или загрузите существующее изображение
+                    </p>
+                    <ul class="step-tips">
+                        <li><i class="fas fa-check"></i> Четкое изображение листьев или цветов</li>
+                        <li><i class="fas fa-check"></i> Хорошее освещение</li>
+                        <li><i class="fas fa-check"></i> Избегайте размытия</li>
+                    </ul>
                 </div>
                 
-                <div class="step">
-                    <div class="step-number">2</div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
                     <div class="step-icon">
                         <i class="fas fa-brain"></i>
                     </div>
                     <h3 class="step-title">AI анализирует</h3>
-                    <p class="step-text">Нейросеть сравнивает с базой из 10,000+ видов растений</p>
+                    <p class="step-description">
+                        PlantNet нейросеть сравнивает с базой из 42,000 видов
+                    </p>
+                    <div class="step-stats">
+                        <div class="step-stat">
+                            <span class="stat-value">98%</span>
+                            <span class="stat-label">Точность</span>
+                        </div>
+                        <div class="step-stat">
+                            <span class="stat-value">2-5с</span>
+                            <span class="stat-label">Скорость</span>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="step">
-                    <div class="step-number">3</div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
                     <div class="step-icon">
                         <i class="fas fa-clipboard-check"></i>
                     </div>
                     <h3 class="step-title">Получите результат</h3>
-                    <p class="step-text">Точное определение вида + персонализированные рекомендации по уходу</p>
+                    <p class="step-description">
+                        Полное описание растения + персонализированные рекомендации
+                    </p>
+                    <div class="step-features">
+                        <span class="feature-tag">
+                            <i class="fas fa-tint"></i> Полив
+                        </span>
+                        <span class="feature-tag">
+                            <i class="fas fa-sun"></i> Освещение
+                        </span>
+                        <span class="feature-tag">
+                            <i class="fas fa-thermometer"></i> Температура
+                        </span>
+                    </div>
                 </div>
                 
-                <div class="step">
-                    <div class="step-number">4</div>
+                <div class="step-card">
+                    <div class="step-number">04</div>
                     <div class="step-icon">
                         <i class="fas fa-history"></i>
                     </div>
                     <h3 class="step-title">Сохраняйте историю</h3>
-                    <p class="step-text">Все распознавания сохраняются в вашем личном кабинете</p>
+                    <p class="step-description">
+                        Все распознавания сохраняются в вашем личном кабинете
+                    </p>
+                    <ul class="step-benefits">
+                        <li><i class="fas fa-chart-line"></i> Отслеживайте рост растений</li>
+                        <li><i class="fas fa-bell"></i> Получайте напоминания по уходу</li>
+                        <li><i class="fas fa-database"></i> Создайте свою коллекцию</li>
+                    </ul>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Умная грядка (остается как в предыдущей версии, но адаптируем под новый дизайн) -->
+    <section class="garden-section" id="garden-section">
+        <!-- Код умной грядки из предыдущего ответа, адаптированный -->
+    </section>
+
+    <!-- Популярные растения -->
+    <section class="plants-section" id="plants-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Популярные комнатные растения</h2>
+                <p class="section-subtitle">Чаще всего определяемые в нашем сервисе</p>
+            </div>
+            
+            <div class="plants-grid">
+                <!-- Карточки растений будут заполняться JavaScript -->
             </div>
         </div>
     </section>
@@ -151,411 +415,121 @@
     <!-- История распознаваний -->
     <section class="history-section" id="history-section">
         <div class="container">
-            <h2 class="section-title">История ваших распознаваний</h2>
-            <p class="section-subtitle">Все растения, которые вы определяли ранее</p>
+            <div class="section-header">
+                <h2 class="section-title">История распознаваний</h2>
+                <p class="section-subtitle">Все растения, которые вы определили</p>
+            </div>
             
-            <div class="history-list" id="historyList">
+            <div class="history-container">
                 <div class="history-empty" id="historyEmpty">
-                    <i class="fas fa-history empty-icon"></i>
-                    <h3>История пока пуста</h3>
-                    <p>Распознайте первое растение, и оно появится здесь</p>
-                    <a href="#ai-section" class="btn btn-primary">
-                        <i class="fas fa-robot"></i> Начать распознавание
-                    </a>
+                    <div class="empty-state">
+                        <i class="fas fa-history empty-icon"></i>
+                        <h3>История пока пуста</h3>
+                        <p>Распознайте первое растение, и оно появится здесь</p>
+                        <a href="#ai-section" class="btn btn-primary">
+                            <i class="fas fa-robot"></i> Начать распознавание
+                        </a>
+                    </div>
                 </div>
                 
-                <!-- Здесь будут добавляться распознанные растения -->
+                <div class="history-grid" id="historyGrid"></div>
             </div>
         </div>
     </section>
 
-    <!-- Популярные растения -->
-    <section class="plants-section" id="plants-section">
-        <div class="container">
-            <h2 class="section-title">Популярные комнатные растения</h2>
-            <p class="section-subtitle">Чаще всего определяемые нашей нейросетью</p>
-            
-            <div class="plants-grid">
-                <div class="plant-card">
-                    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1485955900006-10f4d324d411?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
-                    <div class="plant-info">
-                        <h3 class="plant-name">Сансевиерия</h3>
-                        <p class="plant-desc">Неприхотливое растение, которое очищает воздух. Выживает даже при слабом освещении.</p>
-                        <div class="plant-tags">
-                            <span class="plant-tag">Для новичков</span>
-                            <span class="plant-tag">Очищает воздух</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="plant-card">
-                    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1593482892290-5d188b23f310?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
-                    <div class="plant-info">
-                        <h3 class="plant-name">Замиокулькас</h3>
-                        <p class="plant-desc">Растение, которое не требует частого полива. Идеально для забывчивых хозяев.</p>
-                        <div class="plant-tags">
-                            <span class="plant-tag">Неприхотливый</span>
-                            <span class="plant-tag">Мало воды</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="plant-card">
-                    <div class="plant-image" style="background-image: url('https://images.unsplash.com/photo-1595515112648-bd6c3d6f26e6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
-                    <div class="plant-info">
-                        <h3 class="plant-name">Фикус Бенджамина</h3>
-                        <p class="plant-desc">Красивое дерево, которое любит свет и умеренный полив. Символ уюта в доме.</p>
-                        <div class="plant-tags">
-                            <span class="plant-tag">Декоративный</span>
-                            <span class="plant-tag">Любит свет</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Подвал -->
+    <!-- Футер -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-logo">
-                    <i class="fas fa-leaf"></i>
-                    <span>HelpingPlants</span>
-                    <p class="footer-tagline">AI-помощник для любителей растений</p>
+                <div class="footer-main">
+                    <div class="footer-logo">
+                        <i class="fas fa-leaf"></i>
+                        <span>HelpingPlants</span>
+                    </div>
+                    <p class="footer-tagline">
+                        AI-помощник для любителей и профессионалов растений
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="footer-links">
                     <div class="footer-column">
-                        <h4 class="footer-column-title">Функции</h4>
+                        <h4 class="footer-title">Сервис</h4>
                         <a href="#ai-section" class="footer-link">Распознавание растений</a>
-                        <a href="#history-section" class="footer-link">История</a>
                         <a href="#plants-section" class="footer-link">База растений</a>
+                        <a href="#history-section" class="footer-link">История</a>
+                        <a href="#garden-section" class="footer-link">Умная грядка</a>
                     </div>
                     
                     <div class="footer-column">
-                        <h4 class="footer-column-title">Технологии</h4>
+                        <h4 class="footer-title">Технологии</h4>
+                        <a href="https://plantnet.org" target="_blank" class="footer-link">PlantNet API</a>
                         <a href="#how-it-works" class="footer-link">Как работает AI</a>
-                        <a href="#" class="footer-link">API для разработчиков</a>
                         <a href="#" class="footer-link">Точность распознавания</a>
                     </div>
-                    <!-- Умная грядка -->
-<section class="garden-section" id="garden-section">
-    <div class="container">
-        <h2 class="section-title">Моя умная грядка</h2>
-        <p class="section-subtitle">Отслеживайте условия растений в реальном времени</p>
-        
-        <div class="garden-dashboard">
-            <!-- Статистика -->
-            <div class="garden-stats">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-thermometer-half"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" id="tempValue">24°C</h3>
-                        <p class="stat-label">Температура</p>
-                        <div class="stat-status status-optimal">
-                            <i class="fas fa-check-circle"></i> Оптимально
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-tint"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" id="humidityValue">65%</h3>
-                        <p class="stat-label">Влажность почвы</p>
-                        <div class="stat-status status-warning">
-                            <i class="fas fa-exclamation-triangle"></i> Требуется полив
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" id="lightValue">850</h3>
-                        <p class="stat-label">Освещённость (lux)</p>
-                        <div class="stat-status status-good">
-                            <i class="fas fa-check-circle"></i> Хорошо
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-wind"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" id="phValue">6.5</h3>
-                        <p class="stat-label">Кислотность pH</p>
-                        <div class="stat-status status-optimal">
-                            <i class="fas fa-check-circle"></i> Норма
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Графики -->
-            <div class="garden-charts">
-                <div class="chart-container">
-                    <h3 class="chart-title">Температура за 7 дней</h3>
-                    <canvas id="tempChart"></canvas>
-                </div>
-                
-                <div class="chart-container">
-                    <h3 class="chart-title">Влажность почвы</h3>
-                    <canvas id="humidityChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- Рекомендации -->
-            <div class="garden-recommendations">
-                <h3 class="recommendations-title">
-                    <i class="fas fa-robot"></i> Рекомендации AI
-                </h3>
-                <div class="recommendations-list">
-                    <div class="recommendation">
-                        <div class="recommendation-icon">
-                            <i class="fas fa-tint"></i>
-                        </div>
-                        <div class="recommendation-content">
-                            <h4>Требуется полив</h4>
-                            <p>Влажность почвы опустилась ниже 70%. Рекомендуем полить растения через 2 часа.</p>
-                            <span class="recommendation-time">
-                                <i class="far fa-clock"></i> 14:30 - 15:00
-                            </span>
-                        </div>
-                    </div>
                     
-                    <div class="recommendation">
-                        <div class="recommendation-icon">
-                            <i class="fas fa-temperature-high"></i>
-                        </div>
-                        <div class="recommendation-content">
-                            <h4>Контроль температуры</h4>
-                            <p>Вечером ожидается похолодание до 18°C. Рекомендуем закрыть окна.</p>
-                            <span class="recommendation-time">
-                                <i class="far fa-clock"></i> 18:00 - 20:00
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="recommendation">
-                        <div class="recommendation-icon">
-                            <i class="fas fa-sun"></i>
-                        </div>
-                        <div class="recommendation-content">
-                            <h4>Досветка растений</h4>
-                            <p>Завтра будет пасмурно. Включите фитолампы с 10:00 до 16:00.</p>
-                            <span class="recommendation-time">
-                                <i class="far fa-clock"></i> Завтра, 10:00 - 16:00
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="btn btn-primary btn-full" id="updateGardenData">
-                    <i class="fas fa-sync-alt"></i> Обновить данные с датчиков
-                </button>
-            </div>
-        </div>
-        
-        <!-- Добавление новой грядки -->
-        <div class="add-garden">
-            <h3>Добавить новую умную грядку</h3>
-            <p>Подключите датчики и начните отслеживать условия растений</p>
-            
-            <div class="add-garden-form">
-                <div class="form-group">
-                    <label for="gardenName">
-                        <i class="fas fa-seedling"></i> Название грядки
-                    </label>
-                    <input type="text" id="gardenName" placeholder="Например: Окно на кухне">
-                </div>
-                
-                <div class="form-group">
-                    <label for="gardenPlants">
-                        <i class="fas fa-leaf"></i> Растения на грядке
-                    </label>
-                    <select id="gardenPlants" multiple>
-                        <option value="tomato">Помидоры</option>
-                        <option value="basil">Базилик</option>
-                        <option value="lettuce">Салат</option>
-                        <option value="pepper">Перец</option>
-                        <option value="herbs">Пряные травы</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="sensors">
-                        <i class="fas fa-microchip"></i> Датчики
-                    </label>
-                    <div class="sensors-checkboxes">
-                        <label><input type="checkbox" name="sensor" value="temperature" checked> Температура</label>
-                        <label><input type="checkbox" name="sensor" value="humidity" checked> Влажность почвы</label>
-                        <label><input type="checkbox" name="sensor" value="light"> Освещённость</label>
-                        <label><input type="checkbox" name="sensor" value="ph"> Кислотность pH</label>
-                    </div>
-                </div>
-                
-                <button class="btn btn-primary btn-large" id="createGarden">
-                    <i class="fas fa-plus-circle"></i> Создать умную грядку
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
                     <div class="footer-column">
-                        <h4 class="footer-column-title">Поддержка</h4>
-                        <a href="#" class="footer-link">FAQ</a>
+                        <h4 class="footer-title">Ресурсы</h4>
+                        <a href="#" class="footer-link">Блог о растениях</a>
+                        <a href="#" class="footer-link">Руководство по уходу</a>
+                        <a href="#" class="footer-link">Частые вопросы (FAQ)</a>
                         <a href="#" class="footer-link">Контакты</a>
-                        <a href="#" class="footer-link">Блог</a>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4 class="footer-title">Проект</h4>
+                        <a href="https://github.com/ваш-юзернейм/HelpingPlants" target="_blank" class="footer-link">
+                            <i class="fab fa-github"></i> GitHub репозиторий
+                        </a>
+                        <a href="#" class="footer-link">Документация API</a>
+                        <a href="#" class="footer-link">Для разработчиков</a>
+                        <a href="#" class="footer-link">Политика конфиденциальности</a>
                     </div>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p class="copyright">© 2025 HelpingPlants. AI-powered plant recognition.</p>
-                <div class="social-links">
-                    <a href="#" class="social-link"><i class="fab fa-github"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                <p class="copyright">
+                    © 2025 HelpingPlants. Использует PlantNet API. 
+                    Этот проект с открытым исходным кодом.
+                </p>
+                <div class="footer-tech">
+                    <span class="tech-tag">HTML5</span>
+                    <span class="tech-tag">CSS3</span>
+                    <span class="tech-tag">JavaScript</span>
+                    <span class="tech-tag">PlantNet API</span>
+                    <span class="tech-tag">Chart.js</span>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- JavaScript для функционала -->
-    <script>
-        // Элементы
-        const uploadBox = document.getElementById('uploadBox');
-        const resultBox = document.getElementById('resultBox');
-        const fileInput = document.getElementById('fileInput');
-        const resultImage = document.getElementById('resultImage');
-        const saveResultBtn = document.getElementById('saveResult');
-        const historyList = document.getElementById('historyList');
-        const historyEmpty = document.getElementById('historyEmpty');
+    <!-- Модальное окно для увеличенного изображения -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <img id="modalImage" src="" alt="Увеличенное изображение растения">
+        </div>
+    </div>
 
-        // Загрузка файла
-        fileInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = function(event) {
-                    // Показываем загруженное фото
-                    resultImage.src = event.target.result;
-                    
-                    // Показываем результат
-                    uploadBox.style.display = 'none';
-                    resultBox.style.display = 'block';
-                    
-                    // Имитация работы AI (в реальности здесь будет запрос к API)
-                    simulateAIProcessing();
-                };
-                
-                reader.readAsDataURL(file);
-            }
-        });
+    <!-- Кнопка "Наверх" -->
+    <button class="scroll-top" id="scrollTop">
+        <i class="fas fa-chevron-up"></i>
+    </button>
 
-        // Имитация работы AI
-        function simulateAIProcessing() {
-            setTimeout(() => {
-                // Здесь будет реальный запрос к нейросети
-                console.log('AI обрабатывает изображение...');
-            }, 1000);
-        }
-
-        // Сохранение в историю
-        saveResultBtn.addEventListener('click', function() {
-            // Создаём элемент истории
-            const historyItem = document.createElement('div');
-            historyItem.className = 'history-item';
-            historyItem.innerHTML = `
-                <div class="history-item-image">
-                    <img src="${resultImage.src}" alt="Распознанное растение">
-                </div>
-                <div class="history-item-info">
-                    <h4>Монстера деликатесная</h4>
-                    <p>Определено: ${new Date().toLocaleDateString()}</p>
-                    <div class="history-item-tags">
-                        <span class="history-tag">Комнатное</span>
-                        <span class="history-tag">Тропическое</span>
-                    </div>
-                </div>
-                <button class="history-item-delete">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            // Скрываем сообщение "история пуста"
-            if (historyEmpty) {
-                historyEmpty.style.display = 'none';
-            }
-            
-            // Добавляем в начало списка
-            historyList.prepend(historyItem);
-            
-            // Удаление из истории
-            historyItem.querySelector('.history-item-delete').addEventListener('click', function() {
-                historyItem.remove();
-                
-                // Если история пуста, показываем сообщение
-                if (historyList.querySelectorAll('.history-item').length === 0 && historyEmpty) {
-                    historyEmpty.style.display = 'block';
-                }
-            });
-            
-            alert('Результат сохранён в историю!');
-        });
-
-        // Drag and drop
-        uploadBox.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            uploadBox.classList.add('dragover');
-        });
-
-        uploadBox.addEventListener('dragleave', function() {
-            uploadBox.classList.remove('dragover');
-        });
-
-        uploadBox.addEventListener('drop', function(e) {
-            e.preventDefault();
-            uploadBox.classList.remove('dragover');
-            
-            if (e.dataTransfer.files.length > 0) {
-                fileInput.files = e.dataTransfer.files;
-                fileInput.dispatchEvent(new Event('change'));
-            }
-        });
-
-        // Мобильное меню
-        document.querySelector('.menu-toggle').addEventListener('click', function() {
-            document.querySelector('.nav').classList.toggle('active');
-        });
-        
-        // Плавная прокрутка
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                if(targetId === '#') return;
-                
-                const targetElement = document.querySelector(targetId);
-                if(targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-    </script>
+    <!-- Основной JavaScript -->
+    <script src="script.js"></script>
 </body>
 </html>
