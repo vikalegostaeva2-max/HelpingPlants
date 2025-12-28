@@ -533,3 +533,62 @@
     <script src="script.js"></script>
 </body>
 </html>
+<div class="stat-card humidity">
+    <div class="stat-icon">
+        <i class="fas fa-tint"></i>
+    </div>
+    <h3 class="gradient-text">65%</h3>
+    <p>Влажность почвы</p>
+    
+    <div class="humidity-progress">
+        <div class="progress-container">
+            <div class="progress-fill" style="width: 65%"></div>
+        </div>
+        <div class="progress-labels">
+            <span>Сухо</span>
+            <span>Идеально</span>
+            <span>Мокро</span>
+        </div>
+    </div>
+    
+    <div class="checkbox-group">
+        <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span class="custom-checkbox"></span>
+            <span>Требуется полив</span>
+        </label>
+        <label class="checkbox-item">
+            <input type="checkbox">
+            <span class="custom-checkbox"></span>
+            <span>Автополив включен</span>
+        </label>
+        <label class="checkbox-item">
+            <input type="checkbox">
+            <span class="custom-checkbox"></span>
+            <span>Уведомления</span>
+        </label>
+    </div>
+    
+    <div class="status warning neon wave-effect">
+        <i class="fas fa-exclamation-triangle"></i>
+        Требуется полив
+    </div>
+</div>
+
+<div class="stat-card light">
+    <div class="stat-icon">
+        <i class="fas fa-sun"></i>
+    </div>
+    <h3 class="gradient-text">850</h3>
+    <p>Освещённость (lux)</p>
+    
+    <div class="status good wave-effect">
+        <i class="fas fa-check-circle"></i>
+        Хорошо
+    </div>
+    
+    <button class="refresh-btn glow-effect">
+        <i class="fas fa-sync-alt"></i>
+        Обновить показания
+    </button>
+</div>
