@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelpingPlants - Умный уход за растениями</title>
+    <!-- Библиотеки -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
+    <!-- Иконки FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Toastify для уведомлений -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
+    <style>
+        /* ===== ТВОИ СТИЛИ ===== */
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --primary-light: #34D399;
+            --secondary: #3B82F6;
+            --accent: #8B5CF6;
+            
+            /* Light theme */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F9FAFB;
+            --bg-tertiary: #F3F4F6;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-tertiary: #9CA3AF;
+            --border: #E5E7EB;
+            --border-hover: #D1D5DB;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+            
+            /* Radius */
+            --radius-sm: 0.5rem;
+            --radius: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            
+            /* Transitions */
+            --transition: all 0.2s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #111827;
+            --bg-secondary: #1F2937;
+            --bg-tertiary: #374151;
+            --text-primary: #F9FAFB;
+            --text-secondary: #D1D5DB;
+            --text-tertiary: #9CA3AF;
+            --border: #374151;
+            --border-hover: #4B5563;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* ===== КАРТОЧКИ И ИНТЕРФЕЙС ===== */
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 24px;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ===== ЗАГРУЗКА ФОТО ===== */
+        #dropZone {
+            border: 3px dashed var(--primary);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            background: var(--bg-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+        }
+
+        #dropZone:hover, #dropZone.dragover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-dark);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .btn-select {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-select:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .photo-preview {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        #previewImage {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .plant-info {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+        }
+
+        /* ===== ИНДИКАТОР ВЛАЖНОСТИ ===== */
+        .progress-ring-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 1rem auto;
+        }
+
+        .progress-ring {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 15;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 15;
+            stroke-linecap: round;
+            stroke-dasharray: 565.48;
+            stroke-dashoffset: 565.48;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .progress-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .humidity-scale {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 2rem;
+            padding: 0 10px;
+        }
+
+        .scale-point {
+            text-align: center;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ===== СТАТУСЫ ===== */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .status.optimal {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2));
+            color: #065F46;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status.warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.2));
+            color: #92400E;
+            border: 2px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status.critical {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2));
+            color: #991B1B;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* ===== СЕНСОРЫ ===== */
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .sensor-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .sensor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .sensor-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .sensor-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ===== УПРАВЛЕНИЕ ===== */
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* ===== КНОПКИ ===== */
+        .btn-modern {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ===== РЕЗУЛЬТАТЫ РАСПОЗНАВАНИЯ ===== */
+        .result-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accuracy-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+
+        .care-tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .care-tip {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+        }
+
+        .care-tip h6 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* ===== ЗАГОЛОВОК ===== */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 2rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== ГРИД КОНТЕЙНЕР ===== */
+        .container-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .container-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== ИСТОРИЯ ===== */
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-card {
+            text-align: center;
+            padding: 3rem;
+            display: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== ПРОГРЕСС БАР ===== */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* ===== УВЕДОМЛЕНИЯ ===== */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-primary);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-xl);
+            border-left: 4px solid var(--primary);
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        /* ===== АДАПТИВНОСТЬ ===== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .progress-ring-container {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .progress-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка сайта -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-leaf"></i>
+                HelpingPlants
+                <i class="fas fa-seedling"></i>
+            </h1>
+            <p>Умная система ухода за растениями с распознаванием видов и персонализированными рекомендациями</p>
+        </div>
+
+        <!-- Основной контейнер -->
+        <div class="container-grid">
+            <!-- Секция распознавания растений -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div class="card-title">Распознавание растений</div>
+                </div>
+                
+                <div id="dropZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">
+                        <strong>Загрузите фото растения</strong><br>
+                        <span style="font-size: 1rem; color: var(--text-secondary);">
+                            Перетащите изображение сюда или нажмите для выбора
+                        </span>
+                    </div>
+                    <button class="btn-select" id="selectFileBtn">
+                        <i class="fas fa-folder-open"></i> Выбрать файл
+                    </button>
+                    <input type="file" id="plantImage" accept="image/*" hidden>
+                    <div style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        Поддерживаются: JPG, PNG, WebP • Макс. размер: 5MB
+                    </div>
+                </div>
+                
+                <!-- Загрузка -->
+                <div class="loading-card" id="loadingSection">
+                    <div class="spinner"></div>
+                    <h3>Распознаем растение...</h3>
+                    <p>Анализируем изображение с помощью нейросети</p>
+                    <div class="progress-container">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div id="progressText">0%</div>
+                </div>
+                
+                <!-- Результаты -->
+                <div class="result-card" id="resultSection">
+                    <div class="result-header">
+                        <h3 style="color: white; margin: 0;">
+                            <i class="fas fa-check-circle"></i> Результат распознавания
+                        </h3>
+                        <div class="accuracy-badge" id="accuracyBadge">
+                            <div id="accuracyValue">--%</div>
+                            <div style="font-size: 0.75rem;">точность</div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 2rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                            <div>
+                                <img id="resultImage" src="" alt="Растение" style="width: 100%; border-radius: var(--radius);">
+                            </div>
+                            <div>
+                                <h4 id="plantName">Название растения</h4>
+                                <div id="plantLatin" style="color: var(--text-secondary); margin-bottom: 1rem; font-style: italic;">Научное название</div>
+                                
+                                <div class="plant-details" id="plantDetails">
+                                    <!-- Детали будут добавляться здесь -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="care-tips">
+                            <h5 style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-clipboard-list"></i> Рекомендации по уходу
+                            </h5>
+                            <div class="care-tips-grid" id="careTipsGrid">
+                                <!-- Рекомендации будут добавляться здесь -->
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button class="btn-modern" id="savePlantBtn">
+                                <i class="fas fa-bookmark"></i> Сохранить в коллекцию
+                            </button>
+                            <button class="btn-modern" style="background: linear-gradient(135deg, var(--secondary), #2563EB);" id="shareResultBtn">
+                                <i class="fas fa-share-alt"></i> Поделиться
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-modern" id="scanNewBtn" style="display: none; margin-top: 1rem;">
+                    <i class="fas fa-redo"></i> Распознать другое растение
+                </button>
+            </div>
+
+            <!-- Влажность почвы -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="card-title">Влажность почвы</div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="progress-ring-container">
+                        <svg class="progress-ring" viewBox="0 0 200 200">
+                            <circle class="progress-ring-bg" cx="100" cy="100" r="90"></circle>
+                            <circle class="progress-ring-fill" id="humidityRing" cx="100" cy="100" r="90"></circle>
+                        </svg>
+                        <div class="progress-value" id="humidityValue">65%</div>
+                    </div>
+                    <div style="font-size: 1.1rem; margin-top: 0.5rem; color: var(--text-secondary); text-align: center;">
+                        Текущий уровень влажности почвы
+                    </div>
+                    
+                    <div class="humidity-scale">
+                        <div class="scale-point" style="color: #EF4444;">Сухо</div>
+                        <div class="scale-point" style="color: var(--primary);">Идеально</div>
+                        <div class="scale-point" style="color: #3B82F6;">Мокро</div>
+                    </div>
+                    
+                    <div class="status warning" id="waterStatus" style="margin-top: 1.5rem;">
+                        <i class="fas fa-exclamation-triangle"></i> Требуется полив
+                    </div>
+                </div>
+            </div>
+
+            <!-- Управление уходом -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <div class="card-title">Управление уходом</div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="control-group">
+                        <div>
+                            <strong style="color: var(--text-primary);">Автополив</strong>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Автоматический режим</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="autoMode" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div>
+                            <strong style="color: var(--text-primary);">Уведомления</strong>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Push & Email</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="notifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div>
+                            <strong style="color: var(--text-primary);">Распознавание</strong>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Нейросеть</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="plantRecognition" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div>
+                            <strong style="color: var(--text-primary);">Авто-анализ</strong>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Ежедневная проверка</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="autoAnalysis" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="btn-modern" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> Обновить показания
+                </button>
+                
+                <button class="btn-modern" id="waterNowBtn" style="background: linear-gradient(135deg, #3B82F6, #2563EB); margin-top: 0.5rem;">
+                    <i class="fas fa-tint"></i> Полить сейчас
+                </button>
+            </div>
+
+            <!-- Сенсоры -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-title">Показания сенсоров</div>
+                </div>
+                
+                <div class="sensor-grid">
+                    <div class="sensor-card">
+                        <div class="sensor-label">Освещённость</div>
+                        <div class="sensor-value" id="lightValue">850</div>
+                        <div class="sensor-label">люкс (lux)</div>
+                        <div class="status optimal" id="lightStatus">
+                            <i class="fas fa-check-circle"></i> Хорошо
+                        </div>
+                    </div>
+                    
+                    <div class="sensor-card">
+                        <div class="sensor-label">Температура</div>
+                        <div class="sensor-value" id="tempValue">22.5</div>
+                        <div class="sensor-label">°C</div>
+                        <div class="status optimal" id="tempStatus">
+                            <i class="fas fa-check-circle"></i> Идеально
+                        </div>
+                    </div>
+                    
+                    <div class="sensor-card">
+                        <div class="sensor-label">Влажность воздуха</div>
+                        <div class="sensor-value" id="airHumidity">65%</div>
+                        <div class="sensor-label">относительная</div>
+                        <div class="status optimal" id="airStatus">
+                            <i class="fas fa-check-circle"></i> Нормальная
+                        </div>
+                    </div>
+                    
+                    <div class="sensor-card">
+                        <div class="sensor-label">Питательные вещества</div>
+                        <div class="sensor-value" id="nutrients">78%</div>
+                        <div class="sensor-label">уровень</div>
+                        <div class="status optimal" id="nutrientStatus">
+                            <i class="fas fa-check-circle"></i> Достаточно
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- График истории -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="card-title">История параметров (7 дней)</div>
+                </div>
+                <canvas id="historyChart" height="100"></canvas>
+            </div>
+
+            <!-- История ухода -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="card-title">История ухода</div>
+                </div>
+                <div class="history-list" id="historyList">
+                    <!-- История будет добавляться здесь -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомление -->
+    <div class="notification" id="notification">
+        <div style="font-size: 24px;">✅</div>
+        <div>
+            <strong id="notificationTitle">Успешно</strong><br>
+            <span id="notificationMessage">Операция выполнена</span>
+        </div>
+    </div>
+
+    <script>
+        // ===== ТВОЙ СКРИПТ =====
+        // PlantNet API Configuration
+        const PLANTNET_API_KEY = '2b10zg5qsvvG9qYlnu6t2lLmE'; // Public demo key
+        const PLANTNET_API_URL = 'https://my-api.plantnet.org/v2/identify/all?api-key=' + PLANTNET_API_KEY;
+
+        // Demo plants database for fallback
+        const PLANT_DATABASE = {
+            'monstera': {
+                name: 'Монстера деликатесная',
+                latin: 'Monstera deliciosa',
+                family: 'Ароидные (Araceae)',
+                description: 'Популярное комнатное растение с крупными резными листьями.',
+                care: {
+                    water: 'Полив 1-2 раза в неделю летом, 1 раз в 2 недели зимой. Почва должна просыхать между поливами.',
+                    light: 'Яркий рассеянный свет. Избегайте прямых солнечных лучей.',
+                    temperature: '20-25°C летом, 16-18°C зимой. Не ниже 15°C.',
+                    humidity: 'Высокая влажность. Регулярно опрыскивайте листья.'
+                }
+            },
+            'ficus': {
+                name: 'Фикус Бенджамина',
+                latin: 'Ficus benjamina',
+                family: 'Тутовые (Moraceae)',
+                description: 'Декоративное дерево с мелкими листьями, популярное в офисах и домах.',
+                care: {
+                    water: 'Умеренный полив. Давайте почве просыхать на 2-3 см между поливами.',
+                    light: 'Яркий рассеянный свет. Переносит полутень.',
+                    temperature: '20-25°C, не ниже 16°C зимой.',
+                    humidity: 'Средняя влажность. Избегайте сухого воздуха от батарей.'
+                }
+            },
+            'succulent': {
+                name: 'Суккуленты',
+                latin: 'Various species',
+                family: 'Разные семейства',
+                description: 'Растения с мясистыми листьями, запасающими воду.',
+                care: {
+                    water: 'Редкий полив. 1 раз в 2-3 недели зимой, 1 раз в неделю летом.',
+                    light: 'Яркое освещение. Не менее 6 часов света в день.',
+                    temperature: '18-28°C летом, 10-15°C зимой.',
+                    humidity: 'Низкая влажность. Не опрыскивать.'
+                }
+            },
+            'cactus': {
+                name: 'Кактус',
+                latin: 'Cactaceae',
+                family: 'Кактусовые',
+                description: 'Сукулентные растения с колючками.',
+                care: {
+                    water: 'Очень редкий полив. 1 раз в месяц зимой, 1 раз в 2 недели летом.',
+                    light: 'Яркий прямой свет. Любят солнце.',
+                    temperature: '20-30°C летом, 10-15°C зимой.',
+                    humidity: 'Очень низкая влажность.'
+                }
+            },
+            'orchid': {
+                name: 'Орхидея Фаленопсис',
+                latin: 'Phalaenopsis',
+                family: 'Орхидные',
+                description: 'Эпифитное растение с красивыми цветами.',
+                care: {
+                    water: 'Полив методом погружения 1 раз в неделю.',
+                    light: 'Рассеянный свет. Избегайте прямого солнца.',
+                    temperature: '20-25°C днем, 16-18°C ночью.',
+                    humidity: 'Высокая влажность (60-80%).'
+                }
+            }
+        };
+
+        // ===== ИНИЦИАЛИЗАЦИЯ =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Распознавание растений
+            const plantImageInput = document.getElementById('plantImage');
+            const selectFileBtn = document.getElementById('selectFileBtn');
+            const dropZone = document.getElementById('dropZone');
+            const loadingSection = document.getElementById('loadingSection');
+            const resultSection = document.getElementById('resultSection');
+            const scanNewBtn = document.getElementById('scanNewBtn');
+            const savePlantBtn = document.getElementById('savePlantBtn');
+            const shareResultBtn = document.getElementById('shareResultBtn');
+            const resultImage = document.getElementById('resultImage');
+            
+            // Управление уходом
+            const refreshBtn = document.getElementById('refreshBtn');
+            const waterNowBtn = document.getElementById('waterNowBtn');
+            
+            // Настройка загрузки файлов
+            selectFileBtn.addEventListener('click', () => plantImageInput.click());
+            plantImageInput.addEventListener('change', handleImageUpload);
+            
+            // Drag and drop
+            setupDragAndDrop(dropZone);
+            
+            // Кнопки
+            scanNewBtn.addEventListener('click', resetScanner);
+            savePlantBtn.addEventListener('click', saveToCollection);
+            shareResultBtn.addEventListener('click', shareResult);
+            refreshBtn.addEventListener('click', updateSensors);
+            waterNowBtn.addEventListener('click', waterPlantNow);
+            
+            // Инициализация
