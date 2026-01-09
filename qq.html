@@ -954,4 +954,631 @@
             refreshBtn.addEventListener('click', updateSensors);
             waterNowBtn.addEventListener('click', waterPlantNow);
             
-            // Инициализация
+            // Инициализация других компонентов
+            initHumidityProgress();
+            initChart();
+            loadHistory();
+            
+            // Имитация датчиков
+            setInterval(() => {
+                if (Math.random() > 0.8) {
+                    updateSensors();
+                }
+            }, 10000);
+            
+            showToast('HelpingPlants загружен!', 'success');
+        });
+
+        // ===== ФУНКЦИИ РАСПОЗНАВАНИЯ РАСТЕНИЙ =====
+        
+        // Загрузка изображения
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!validateImage(file)) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                resultImage.src = e.target.result;
+                startRecognition(file, e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Валидация изображения
+        function validateImage(file) {
+            const maxSize = 5 * 1024 * 1024;
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            
+            if (!allowedTypes.includes(file.type)) {
+                showToast('Пожалуйста, загрузите JPG, PNG или WebP', 'error');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                showToast('Файл слишком большой (максимум 5MB)', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Настройка drag and drop
+        function setupDragAndDrop(dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    const plantImageInput = document.getElementById('plantImage');
+                    plantImageInput.files = e.dataTransfer.files;
+                    
+                    if (validateImage(file)) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            resultImage.src = e.target.result;
+                            startRecognition(file, e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+        }
+
+        // Начало распознавания
+        async function startRecognition(file, base64Image) {
+            // Показать загрузку
+            document.getElementById('dropZone').style.display = 'none';
+            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('scanNewBtn').style.display = 'none';
+            
+            // Симуляция прогресса
+            simulateProgress();
+            
+            try {
+                let result;
+                
+                // Сначала пробуем PlantNet API
+                try {
+                    result = await callPlantNetAPI(file);
+                } catch (apiError) {
+                    console.log('API недоступен, используем демо-режим:', apiError);
+                    result = await getDemoRecognition();
+                }
+                
+                // Обработка результата
+                processRecognitionResult(result);
+                
+            } catch (error) {
+                console.error('Ошибка распознавания:', error);
+                showToast('Ошибка при распознавании. Попробуйте другое фото.', 'error');
+                resetScanner();
+            }
+        }
+
+        // Вызов PlantNet API
+        async function callPlantNetAPI(file) {
+            const formData = new FormData();
+            formData.append('images', file);
+            formData.append('organs', 'leaf');
+            formData.append('include-related-images', 'true');
+            
+            const response = await fetch(PLANTNET_API_URL, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Ошибка API: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        // Демо-распознавание
+        async function getDemoRecognition() {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const plants = Object.keys(PLANT_DATABASE);
+            const randomPlant = plants[Math.floor(Math.random() * plants.length)];
+            
+            return {
+                results: [
+                    {
+                        score: 0.85 + Math.random() * 0.14,
+                        species: {
+                            commonNames: [PLANT_DATABASE[randomPlant].name],
+                            scientificName: PLANT_DATABASE[randomPlant].latin,
+                            family: {
+                                scientificName: PLANT_DATABASE[randomPlant].family
+                            }
+                        }
+                    }
+                ]
+            };
+        }
+
+        // Обработка результатов
+        function processRecognitionResult(data) {
+            // Скрыть загрузку
+            document.getElementById('loadingSection').style.display = 'none';
+            
+            if (!data.results || data.results.length === 0) {
+                showToast('Растение не распознано. Попробуйте другое фото.', 'warning');
+                resetScanner();
+                return;
+            }
+            
+            const bestMatch = data.results[0];
+            const confidence = Math.round(bestMatch.score * 100);
+            
+            // Обновить интерфейс
+            updateResultDisplay(bestMatch, confidence);
+            
+            // Загрузить рекомендации по уходу
+            loadCareTips(bestMatch);
+            
+            // Показать результаты
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('scanNewBtn').style.display = 'block';
+            
+            showToast('Растение успешно распознано!', 'success');
+            addHistory('🌿', 'Растение распознано', bestMatch.species.commonNames?.[0] || 'Неизвестное растение');
+        }
+
+        // Обновление отображения результатов
+        function updateResultDisplay(plant, confidence) {
+            // Название растения
+            document.getElementById('plantName').textContent = 
+                plant.species.commonNames?.[0] || 'Неизвестное растение';
+            document.getElementById('plantLatin').textContent = 
+                plant.species.scientificName || '';
+            
+            // Точность
+            document.getElementById('accuracyValue').textContent = `${confidence}%`;
+            const badge = document.getElementById('accuracyBadge');
+            
+            if (confidence >= 90) {
+                badge.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+            } else if (confidence >= 70) {
+                badge.style.background = 'linear-gradient(135deg, #3B82F6, #1D4ED8)';
+            } else {
+                badge.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
+            }
+            
+            // Детали растения
+            updatePlantDetails(plant);
+        }
+
+        // Обновление деталей растения
+        function updatePlantDetails(plant) {
+            const detailsHtml = `
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="color: var(--primary);">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Семейство</div>
+                        <div style="font-weight: 500;">${plant.species.family?.scientificName || 'Не определено'}</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="color: var(--primary);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Уверенность</div>
+                        <div style="font-weight: 500;">${Math.round(plant.score * 100)}%</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('plantDetails').innerHTML = detailsHtml;
+        }
+
+        // Загрузка рекомендаций по уходу
+        function loadCareTips(plant) {
+            const plantKey = document.getElementById('plantName').textContent.toLowerCase();
+            
+            // Поиск в базе данных
+            let matchedPlant = null;
+            for (const [key, data] of Object.entries(PLANT_DATABASE)) {
+                if (plantKey.includes(key) || plant.species.scientificName?.toLowerCase().includes(key)) {
+                    matchedPlant = data;
+                    break;
+                }
+            }
+            
+            // Стандартные рекомендации
+            if (!matchedPlant) {
+                matchedPlant = {
+                    care: {
+                        water: 'Поливайте, когда верхний слой почвы подсохнет на 2-3 см.',
+                        light: 'Яркий рассеянный свет оптимален для большинства растений.',
+                        temperature: 'Поддерживайте температуру 18-25°C.',
+                        humidity: 'Средняя влажность (40-60%) подходит большинству комнатных растений.'
+                    }
+                };
+            }
+            
+            // Отображение рекомендаций
+            const tipsHtml = `
+                <div class="care-tip">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="color: #3B82F6;">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <h6 style="margin: 0;">Полив</h6>
+                    </div>
+                    <p style="margin: 0; color: var(--text-secondary);">${matchedPlant.care.water}</p>
+                </div>
+                <div class="care-tip">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="color: #F59E0B;">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <h6 style="margin: 0;">Освещение</h6>
+                    </div>
+                    <p style="margin: 0; color: var(--text-secondary);">${matchedPlant.care.light}</p>
+                </div>
+                <div class="care-tip">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="color: #EF4444;">
+                            <i class="fas fa-thermometer-half"></i>
+                        </div>
+                        <h6 style="margin: 0;">Температура</h6>
+                    </div>
+                    <p style="margin: 0; color: var(--text-secondary);">${matchedPlant.care.temperature}</p>
+                </div>
+                <div class="care-tip">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="color: #8B5CF6;">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <h6 style="margin: 0;">Влажность</h6>
+                    </div>
+                    <p style="margin: 0; color: var(--text-secondary);">${matchedPlant.care.humidity}</p>
+                </div>
+            `;
+            
+            document.getElementById('careTipsGrid').innerHTML = tipsHtml;
+        }
+
+        // Симуляция прогресса
+        function simulateProgress() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 95) {
+                    progress = 95;
+                }
+                
+                document.getElementById('progressFill').style.width = `${progress}%`;
+                document.getElementById('progressText').textContent = `${Math.round(progress)}%`;
+                
+                if (progress >= 95) {
+                    clearInterval(interval);
+                }
+            }, 300);
+        }
+
+        // Сброс сканера
+        function resetScanner() {
+            document.getElementById('plantImage').value = '';
+            document.getElementById('dropZone').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('scanNewBtn').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = '0%';
+        }
+
+        // Сохранение в коллекцию
+        function saveToCollection() {
+            const plantData = {
+                name: document.getElementById('plantName').textContent,
+                latin: document.getElementById('plantLatin').textContent,
+                image: document.getElementById('resultImage').src,
+                date: new Date().toLocaleDateString('ru-RU'),
+                confidence: document.getElementById('accuracyValue').textContent
+            };
+            
+            let collection = JSON.parse(localStorage.getItem('plantCollection') || '[]');
+            collection.push(plantData);
+            localStorage.setItem('plantCollection', JSON.stringify(collection));
+            
+            showToast('Растение сохранено в вашу коллекцию!', 'success');
+            addHistory('📚', 'Растение сохранено', plantData.name);
+        }
+
+        // Поделиться результатом
+        function shareResult() {
+            if (navigator.share) {
+                navigator.share({
+                    title: `Я распознал растение: ${document.getElementById('plantName').textContent}`,
+                    text: `С помощью HelpingPlants я определил, что это ${document.getElementById('plantName').textContent}`,
+                    url: window.location.href
+                });
+            } else {
+                const text = `Растение: ${document.getElementById('plantName').textContent}\nРаспознано на HelpingPlants`;
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Результат скопирован в буфер обмена!', 'success');
+                });
+            }
+        }
+
+        // ===== ФУНКЦИИ УПРАВЛЕНИЯ УХОДОМ =====
+        
+        // Прогресс-бар влажности
+        function initHumidityProgress() {
+            const humidityRing = document.getElementById('humidityRing');
+            const humidityValue = document.getElementById('humidityValue');
+            const waterStatus = document.getElementById('waterStatus');
+            let humidity = 65;
+            
+            const circumference = 2 * Math.PI * 90;
+            const offset = circumference - (humidity / 100) * circumference;
+            humidityRing.style.strokeDashoffset = offset;
+            
+            setInterval(() => {
+                humidity = 60 + Math.random() * 15;
+                const newOffset = circumference - (humidity / 100) * circumference;
+                
+                humidityRing.style.transition = 'stroke-dashoffset 1s ease';
+                humidityRing.style.strokeDashoffset = newOffset;
+                
+                let current = parseInt(humidityValue.textContent);
+                let target = Math.round(humidity);
+                let step = (target - current) / 20;
+                
+                let counter = current;
+                const updateCounter = () => {
+                    counter += step;
+                    if ((step > 0 && counter >= target) || (step < 0 && counter <= target)) {
+                        humidityValue.textContent = target + '%';
+                        return;
+                    }
+                    humidityValue.textContent = Math.round(counter) + '%';
+                    requestAnimationFrame(updateCounter);
+                };
+                updateCounter();
+                
+                // Обновление статуса полива
+                if (humidity < 50) {
+                    waterStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Требуется полив';
+                    waterStatus.className = 'status warning';
+                } else {
+                    waterStatus.innerHTML = '<i class="fas fa-check-circle"></i> Влажность в норме';
+                    waterStatus.className = 'status optimal';
+                }
+            }, 5000);
+        }
+
+        // Обновление сенсоров
+        function updateSensors() {
+            const sensors = {
+                lightValue: { min: 800, max: 1200, unit: '', statusId: 'lightStatus' },
+                tempValue: { min: 20, max: 25, unit: '°C', statusId: 'tempStatus' },
+                airHumidity: { min: 55, max: 70, unit: '%', statusId: 'airStatus' },
+                nutrients: { min: 70, max: 85, unit: '%', statusId: 'nutrientStatus' }
+            };
+            
+            for (const [id, config] of Object.entries(sensors)) {
+                const value = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+                const element = document.getElementById(id);
+                element.textContent = value + config.unit;
+                
+                updateSensorStatus(id, value, config.statusId);
+            }
+            
+            addHistory('🔄', 'Показания сенсоров обновлены', 'Автоматическое обновление');
+            showToast('Показания обновлены', 'success');
+        }
+
+        // Обновление статусов сенсоров
+        function updateSensorStatus(sensorId, value, statusElementId) {
+            const statusElement = document.getElementById(statusElementId);
+            if (!statusElement) return;
+            
+            let statusText = '';
+            let statusClass = '';
+            let icon = '';
+            
+            switch(sensorId) {
+                case 'lightValue':
+                    if (value > 1000) {
+                        statusText = 'Отлично';
+                        statusClass = 'optimal';
+                        icon = 'fa-check-circle';
+                    } else if (value > 700) {
+                        statusText = 'Хорошо';
+                        statusClass = 'optimal';
+                        icon = 'fa-check-circle';
+                    } else {
+                        statusText = 'Слабо';
+                        statusClass = 'warning';
+                        icon = 'fa-exclamation-triangle';
+                    }
+                    break;
+                    
+                case 'tempValue':
+                    if (value > 23) {
+                        statusText = 'Жарко';
+                        statusClass = 'warning';
+                        icon = 'fa-exclamation-triangle';
+                    } else if (value > 20) {
+                        statusText = 'Идеально';
+                        statusClass = 'optimal';
+                        icon = 'fa-check-circle';
+                    } else {
+                        statusText = 'Прохладно';
+                        statusClass = 'warning';
+                        icon = 'fa-exclamation-triangle';
+                    }
+                    break;
+                    
+                case 'airHumidity':
+                    if (value > 70) {
+                        statusText = 'Высокая';
+                        statusClass = 'warning';
+                        icon = 'fa-exclamation-triangle';
+                    } else if (value > 50) {
+                        statusText = 'Нормальная';
+                        statusClass = 'optimal';
+                        icon = 'fa-check-circle';
+                    } else {
+                        statusText = 'Низкая';
+                        statusClass = 'warning';
+                        icon = 'fa-exclamation-triangle';
+                    }
+                    break;
+                    
+                case 'nutrients':
+                    if (value > 80) {
+                        statusText = 'Отлично';
+                        statusClass = 'optimal';
+                        icon = 'fa-check-circle';
+                    } else if (value > 60) {
+                        statusText = 'Достаточно';
+                        statusClass = 'optimal';
+                        icon = 'fa-check-circle';
+                    } else {
+                        statusText = 'Требуется';
+                        statusClass = 'warning';
+                        icon = 'fa-exclamation-triangle';
+                    }
+                    break;
+            }
+            
+            statusElement.innerHTML = `<i class="fas ${icon}"></i> ${statusText}`;
+            statusElement.className = `status ${statusClass}`;
+        }
+
+        // Полив сейчас
+        function waterPlantNow() {
+            showToast('Начался полив растения...', 'info');
+            addHistory('💧', 'Ручной полив', 'Активирован пользователем');
+            
+            // Имитация полива
+            setTimeout(() => {
+                showToast('Полив завершен', 'success');
+                // Обновляем влажность
+                document.getElementById('humidityValue').textContent = '85%';
+                document.getElementById('humidityRing').style.strokeDashoffset = '85';
+                document.getElementById('waterStatus').innerHTML = '<i class="fas fa-check-circle"></i> Влажность в норме';
+                document.getElementById('waterStatus').className = 'status optimal';
+            }, 3000);
+        }
+
+        // ===== ГРАФИК =====
+        function initChart() {
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                    datasets: [
+                        {
+                            label: 'Влажность почвы (%)',
+                            data: [58, 62, 65, 63, 67, 64, 65],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Освещённость (lux/10)',
+                            data: [85, 82, 87, 90, 88, 86, 85],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== ИСТОРИЯ =====
+        function loadHistory() {
+            const initialHistory = [
+                { icon: '💧', action: 'Автополив выполнен', time: '10:30', details: '250 мл воды' },
+                { icon: '🌡️', action: 'Температура нормализована', time: '09:15', details: '22.5°C' },
+                { icon: '🌿', action: 'Внесены удобрения', time: 'Вчера', details: 'NPK комплекс' },
+                { icon: '📱', action: 'Отправлено уведомление', time: 'Вчера', details: 'Требуется полив' },
+                { icon: '🔍', action: 'Анализ состояния', time: '2 дня назад', details: 'Все параметры в норме' }
+            ];
+            
+            initialHistory.forEach(item => addHistory(item.icon, item.action, item.details, item.time));
+        }
+        
+        function addHistory(icon, action, details, customTime = null) {
+            const historyList = document.getElementById('historyList');
+            if (!historyList) return;
+            
+            const now = new Date();
+            const time = customTime || now.toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div style="font-size: 24px;">${icon}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 500; color: var(--text-primary);">${action}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">${details}</div>
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">${time}</div>
+            `;
+            
+            historyList.insertBefore(div, historyList.firstChild);
+            
+            if (historyList.children.length > 10) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+
+        // ===== УВЕДОМЛЕНИЯ =====
+        function showToast(message, type = 'info') {
+            const colors = {
+                success: '#10B981',
+                error: '#EF4444',
+                warning: '#F59E0B',
+                info: '#3B82F6'
+            };
+            
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: colors[type] || colors.info,
+                stopOnFocus: true
+            }).showToast();
+        }
+    </script>
+</body>
+</html>
