@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlantCareAI - Умный помощник для растений</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка сайта -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                <span>PlantCare<span class="ai-text">AI</span></span>
+            </div>
+            <nav class="nav">
+                <a href="#main" class="nav-link active"><i class="fas fa-home"></i> Главная</a>
+                <a href="#identification" class="nav-link"><i class="fas fa-camera"></i> Определение</a>
+                <a href="#sensors" class="nav-link"><i class="fas fa-microchip"></i> Датчики</a>
+                <a href="#care" class="nav-link"><i class="fas fa-tint"></i> Уход</a>
+            </nav>
+            <div class="user-menu">
+                <button class="btn-notification"><i class="fas fa-bell"></i></button>
+                <div class="user-avatar">У</div>
+            </div>
+        </header>
+
+        <!-- Основное содержимое -->
+        <main class="main-content">
+            <!-- Приветственный блок -->
+            <section class="welcome-section">
+                <h1><i class="fas fa-robot"></i> Умный помощник для растений</h1>
+                <p class="subtitle">ИИ анализирует состояние растений и рекомендует оптимальный уход</p>
+            </section>
+
+            <div class="dashboard-grid">
+                <!-- Левая колонка -->
+                <div class="left-column">
+                    <!-- Блок распознавания растений -->
+                    <section class="card identification-card" id="identification">
+                        <div class="card-header">
+                            <h2><i class="fas fa-camera"></i> Распознавание растений</h2>
+                            <div class="card-subtitle">Загрузите фото растения</div>
+                        </div>
+                        
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p class="upload-text">Перетащите изображение сюда или нажмите для выбора</p>
+                            <button class="btn-select-file" id="selectFileBtn">
+                                <i class="fas fa-folder-open"></i> Выбрать файл
+                            </button>
+                            <p class="file-info">Поддерживаются: JPG, PNG, размер до 10MB</p>
+                            <input type="file" id="fileInput" accept="image/*" hidden>
+                        </div>
+
+                        <!-- Прогресс загрузки (скрыт по умолчанию) -->
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-header">
+                                <span>Загрузка и анализ</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-status">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Идентификация растения...</span>
+                            </div>
+                        </div>
+
+                        <!-- Результат распознавания -->
+                        <div class="result-card" id="resultCard" style="display: none;">
+                            <div class="plant-header">
+                                <div class="plant-icon"><i class="fas fa-leaf"></i></div>
+                                <div>
+                                    <h3 id="plantName">Одуванчик обыкновенный</h3>
+                                    <div class="confidence">Точность: 94%</div>
+                                </div>
+                            </div>
+                            <div class="plant-care-tips">
+                                <h4><i class="fas fa-lightbulb"></i> Рекомендации по уходу:</h4>
+                                <p id="plantCareText">Обеспечьте яркое солнце, умеренный полив без застоя воды, рыхлую почву. Подкармливайте каждые 2-3 недели в период роста.</p>
+                            </div>
+                            <div class="care-details">
+                                <div class="care-item">
+                                    <i class="fas fa-sun"></i>
+                                    <span>Солнце: <strong>Яркое</strong></span>
+                                </div>
+                                <div class="care-item">
+                                    <i class="fas fa-tint"></i>
+                                    <span>Полив: <strong>Умеренный</strong></span>
+                                </div>
+                                <div class="care-item">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <span>Температура: <strong>18-25°C</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Блок влажности почвы -->
+                    <section class="card soil-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-seedling"></i> Влажность почвы</h2>
+                            <div class="card-subtitle">Данные в реальном времени</div>
+                        </div>
+                        
+                        <div class="humidity-display">
+                            <div class="humidity-scale">
+                                <div class="scale-mark dry">Сухо</div>
+                                <div class="humidity-indicator" id="humidityIndicator">
+                                    <div class="humidity-value">69%</div>
+                                </div>
+                                <div class="scale-mark ideal">Идеально</div>
+                            </div>
+                            
+                            <div class="humidity-info">
+                                <div class="current-level">
+                                    <div class="level-title">Текущий уровень влажности</div>
+                                    <div class="level-value">69%</div>
+                                </div>
+                                <div class="status-indicator">
+                                    <div class="status-dot ideal-dot"></div>
+                                    <span>Идеально</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-panel">
+                            <h3><i class="fas fa-sliders-h"></i> Управление уходом</h3>
+                            
+                            <div class="control-item">
+                                <div class="control-label">
+                                    <span>Требуется полив</span>
+                                    <span class="control-status">Норма</span>
+                                </div>
+                                <div class="control-slider">
+                                    <div class="slider-fill" style="width: 40%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="control-item">
+                                <div class="control-label">
+                                    <span>Автополив</span>
+                                    <span class="control-status active">Автоматический режим</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="control-item">
+                                <div class="control-label">
+                                    <span>Уведомления</span>
+                                    <span class="control-status">Push & Email</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="control-item">
+                                <div class="control-label">
+                                    <span>Распознавание</span>
+                                    <span class="control-status">PlantNet API</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-refresh">
+                            <i class="fas fa-sync-alt"></i> Обновить показания
+                        </button>
+                    </section>
+                </div>
+
+                <!-- Правая колонка -->
+                <div class="right-column">
+                    <!-- Блок показаний сенсоров -->
+                    <section class="card sensors-card" id="sensors">
+                        <div class="card-header">
+                            <h2><i class="fas fa-microchip"></i> Показания сенсоров</h2>
+                            <div class="card-subtitle">Данные с датчиков в реальном времени</div>
+                        </div>
+                        
+                        <div class="sensors-grid">
+                            <div class="sensor-item">
+                                <div class="sensor-icon">
+                                    <i class="fas fa-sun"></i>
+                                </div>
+                                <div class="sensor-info">
+                                    <div class="sensor-name">Освещённость</div>
+                                    <div class="sensor-value">1180 <span class="unit">люкс (lux)</span></div>
+                                </div>
+                                <div class="sensor-status excellent">
+                                    <i class="fas fa-check-circle"></i> Отлично
+                                </div>
+                            </div>
+                            
+                            <div class="sensor-item">
+                                <div class="sensor-icon">
+                                    <i class="fas fa-thermometer-half"></i>
+                                </div>
+                                <div class="sensor-info">
+                                    <div class="sensor-name">Температура</div>
+                                    <div class="sensor-value">20°C <span class="unit">°C</span></div>
+                                </div>
+                                <div class="sensor-status ideal">
+                                    <i class="fas fa-check-circle"></i> Идеально
+                                </div>
+                            </div>
+                            
+                            <div class="sensor-item">
+                                <div class="sensor-icon">
+                                    <i class="fas fa-cloud"></i>
+                                </div>
+                                <div class="sensor-info">
+                                    <div class="sensor-name">Влажность воздуха</div>
+                                    <div class="sensor-value">62% <span class="unit">относительная</span></div>
+                                </div>
+                                <div class="sensor-status normal">
+                                    <i class="fas fa-info-circle"></i> Нормальная
+                                </div>
+                            </div>
+                            
+                            <div class="sensor-item">
+                                <div class="sensor-icon">
+                                    <i class="fas fa-flask"></i>
+                                </div>
+                                <div class="sensor-info">
+                                    <div class="sensor-name">Питательные вещества</div>
+                                    <div class="sensor-value">80% <span class="unit">уровень</span></div>
+                                </div>
+                                <div class="sensor-status good">
+                                    <i class="fas fa-check-circle"></i> Достаточно
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sensor-history">
+                            <h3><i class="fas fa-chart-line"></i> История показаний</h3>
+                            <div class="history-chart">
+                                <div class="chart-placeholder">
+                                    <p>График изменения показателей за последние 7 дней</p>
+                                    <div class="chart-bars">
+                                        <div class="chart-bar" style="height: 70%;"></div>
+                                        <div class="chart-bar" style="height: 85%;"></div>
+                                        <div class="chart-bar" style="height: 65%;"></div>
+                                        <div class="chart-bar" style="height: 90%;"></div>
+                                        <div class="chart-bar" style="height: 75%;"></div>
+                                        <div class="chart-bar" style="height: 80%;"></div>
+                                        <div class="chart-bar" style="height: 69%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Блок рекомендаций ИИ -->
+                    <section class="card ai-recommendations">
+                        <div class="card-header">
+                            <h2><i class="fas fa-robot"></i> Рекомендации ИИ</h2>
+                            <div class="card-subtitle">Персонализированные советы по уходу</div>
+                        </div>
+                        
+                        <div class="recommendation-list">
+                            <div class="recommendation-item">
+                                <div class="rec-icon urgent">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="rec-content">
+                                    <h4>Пора полить растение</h4>
+                                    <p>Влажность почвы опустилась до 40%. Рекомендуем полив 200 мл воды.</p>
+                                    <div class="rec-time"><i class="far fa-clock"></i> 2 часа назад</div>
+                                </div>
+                            </div>
+                            
+                            <div class="recommendation-item">
+                                <div class="rec-icon warning">
+                                    <i class="fas fa-sun"></i>
+                                </div>
+                                <div class="rec-content">
+                                    <h4>Увеличьте освещение</h4>
+                                    <p>Растение получает недостаточно света. Переместите его ближе к окну.</p>
+                                    <div class="rec-time"><i class="far fa-clock"></i> 5 часов назад</div>
+                                </div>
+                            </div>
+                            
+                            <div class="recommendation-item">
+                                <div class="rec-icon info">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <div class="rec-content">
+                                    <h4>Пора для подкормки</h4>
+                                    <p>Через 3 дня рекомендуем внести удобрение для цветущих растений.</p>
+                                    <div class="rec-time"><i class="far fa-clock"></i> 1 день назад</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-view-all">
+                            <i class="fas fa-list"></i> Показать все рекомендации
+                        </button>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <!-- Подвал -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-seedling"></i>
+                    <span>PlantCare<span class="ai-text">AI</span></span>
+                </div>
+                <div class="footer-info">
+                    <p>Школьный проект • Умная система ухода за растениями</p>
+                    <p class="copyright">© 2025 PlantCareAI. Все данные для демонстрации.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#"><i class="fab fa-github"></i> GitHub</a>
+                    <a href="#"><i class="fas fa-book"></i> Документация</a>
+                    <a href="#"><i class="fas fa-users"></i> О команде</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
