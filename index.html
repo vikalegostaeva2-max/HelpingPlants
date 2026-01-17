@@ -333,21 +333,66 @@
         </footer>
     </div>
     <section class="card identification-card">
-    <div class="card-header">
-        <h2><i class="fas fa-camera"></i> Распознавание растений</h2>
-        <div class="card-subtitle">Загрузите фото растения</div>
+    <div class="container">
+        <h1>🌿 Распознавание растений</h1>
+        <p>Загрузите фото растения</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p style="margin-bottom: 15px;">Перетащите изображение сюда или нажмите для выбора</p>
+            <button onclick="document.getElementById('fileInput').click()">📁 Выбрать файл</button>
+            <p style="margin-top: 15px; color: #666; font-size: 14px;">Поддерживаются: JPG, PNG, размер до 10MB</p>
+            <input type="file" id="fileInput" accept="image/*" hidden onchange="handleFile(this.files[0])">
+        </div>
+        
+        <div class="result" id="result">
+            <h3>✅ Растение распознано!</h3>
+            <p id="plantName">Название растения появится здесь</p>
+        </div>
     </div>
     
-    <div class="upload-area" id="uploadArea">
-        <i class="fas fa-cloud-upload-alt upload-icon"></i>
-        <p class="upload-text">Перетащите изображение сюда или нажмите для выбора</p>
-        <button class="btn-select-file" id="selectFileBtn">
-            <i class="fas fa-folder-open"></i> Выбрать файл
-        </button>
-        <p class="file-info">Поддерживаются: JPG, PNG, размер до 10MB</p>
-        <input type="file" id="fileInput" accept="image/*" hidden>
-    </div>
-    
+    <script>
+        // Drag & Drop
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#2ecc71';
+            uploadArea.style.backgroundColor = '#f9fff9';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#ccc';
+            uploadArea.style.backgroundColor = 'white';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+            uploadArea.style.backgroundColor = 'white';
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        // Обработка файла
+        function handleFile(file) {
+            if (!file.type.match('image.*')) {
+                alert('Пожалуйста, выберите изображение');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Файл слишком большой (максимум 10MB)');
+                return;
+            }
+            
+            // Показываем результат (демо)
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('plantName').textContent = 
+                `Файл "${file.name}" загружен (${Math.round(file.size/1024)} KB)`;
+        }
+    </script>
+</body>
+</html>
     <!-- Прогресс бар (скрыт по умолчанию) -->
     <div class="upload-progress" id="uploadProgress" style="display: none;">
         <div class="progress-header">
@@ -417,63 +462,4 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌿 Распознавание растений</h1>
-        <p>Загрузите фото растения</p>
-        
-        <div class="upload-area" id="uploadArea">
-            <p style="margin-bottom: 15px;">Перетащите изображение сюда или нажмите для выбора</p>
-            <button onclick="document.getElementById('fileInput').click()">📁 Выбрать файл</button>
-            <p style="margin-top: 15px; color: #666; font-size: 14px;">Поддерживаются: JPG, PNG, размер до 10MB</p>
-            <input type="file" id="fileInput" accept="image/*" hidden onchange="handleFile(this.files[0])">
-        </div>
-        
-        <div class="result" id="result">
-            <h3>✅ Растение распознано!</h3>
-            <p id="plantName">Название растения появится здесь</p>
-        </div>
-    </div>
-    
-    <script>
-        // Drag & Drop
-        const uploadArea = document.getElementById('uploadArea');
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#2ecc71';
-            uploadArea.style.backgroundColor = '#f9fff9';
-        });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.borderColor = '#ccc';
-            uploadArea.style.backgroundColor = 'white';
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#ccc';
-            uploadArea.style.backgroundColor = 'white';
-            if (e.dataTransfer.files.length > 0) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
-        
-        // Обработка файла
-        function handleFile(file) {
-            if (!file.type.match('image.*')) {
-                alert('Пожалуйста, выберите изображение');
-                return;
-            }
-            
-            if (file.size > 10 * 1024 * 1024) {
-                alert('Файл слишком большой (максимум 10MB)');
-                return;
-            }
-            
-            // Показываем результат (демо)
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('plantName').textContent = 
-                `Файл "${file.name}" загружен (${Math.round(file.size/1024)} KB)`;
-        }
-    </script>
-</body>
-</html>
+
