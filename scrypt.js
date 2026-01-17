@@ -878,3 +878,275 @@ window.PlantAI = {
         mode: gigachatAI ? 'online' : 'demo'
     })
 };
+// DOM элементы
+const fileInput = document.getElementById('fileInput');
+const selectFileBtn = document.getElementById('selectFileBtn');
+const uploadArea = document.getElementById('uploadArea');
+const uploadProgress = document.getElementById('uploadProgress');
+const progressFill = document.getElementById('progressFill');
+const progressPercent = document.getElementById('progressPercent');
+const resultCard = document.getElementById('resultCard');
+const plantName = document.getElementById('plantName');
+const plantCareText = document.getElementById('plantCareText');
+const plantConfidence = document.getElementById('plantConfidence');
+const lightInfo = document.getElementById('lightInfo');
+const waterInfo = document.getElementById('waterInfo');
+const tempInfo = document.getElementById('tempInfo');
+
+// Функция инициализации загрузки файлов
+function initFileUpload() {
+    console.log('Инициализация загрузки файлов...');
+    
+    // Клик по кнопке выбора файла
+    if (selectFileBtn) {
+        selectFileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
+    
+    // Клик по области загрузки
+    if (uploadArea) {
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Drag & Drop функционал
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#2ecc71';
+            uploadArea.style.backgroundColor = 'rgba(46, 204, 113, 0.1)';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#e0e0e0';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#e0e0e0';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleImageFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+    
+    // Изменение выбранного файла
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (fileInput.files.length > 0) {
+                handleImageFile(fileInput.files[0]);
+            }
+        });
+    }
+    
+    console.log('Функционал загрузки файлов инициализирован');
+}
+
+// Обработка файла изображения
+async function handleImageFile(file) {
+    // Проверка типа файла
+    if (!file.type.match('image.*')) {
+        showNotification('Пожалуйста, выберите изображение (JPG, PNG)', 'error');
+        return;
+    }
+    
+    // Проверка размера
+    if (file.size > 10 * 1024 * 1024) {
+        showNotification('Изображение слишком большое (максимум 10MB)', 'error');
+        return;
+    }
+    
+    // Показываем прогресс
+    if (uploadProgress) {
+        uploadProgress.style.display = 'block';
+    }
+    if (resultCard) {
+        resultCard.style.display = 'none';
+    }
+    
+    // Анимация прогресса
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 2;
+        if (progressFill) {
+            progressFill.style.width = progress + '%';
+        }
+        if (progressPercent) {
+            progressPercent.textContent = progress + '%';
+        }
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            // Запускаем анализ
+            analyzeImage(file);
+        }
+    }, 50);
+}
+
+// Анализ изображения
+async function analyzeImage(file) {
+    try {
+        console.log('Начинаю анализ изображения...');
+        
+        // Здесь будет вызов нейросети
+        // Пока используем демо-результат
+        await simulateAIProcessing();
+        
+        // Показываем результат
+        setTimeout(() => {
+            if (uploadProgress) {
+                uploadProgress.style.display = 'none';
+            }
+            if (resultCard) {
+                resultCard.style.display = 'block';
+                showDemoResult();
+            }
+        }, 500);
+        
+    } catch (error) {
+        console.error('Ошибка анализа:', error);
+        showNotification('Ошибка при анализе изображения', 'error');
+        
+        if (uploadProgress) {
+            uploadProgress.style.display = 'none';
+        }
+    }
+}
+
+// Имитация работы AI
+async function simulateAIProcessing() {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            console.log('AI анализ завершен (демо)');
+            resolve();
+        }, 1000);
+    });
+}
+
+// Показ демо-результата
+function showDemoResult() {
+    const demoPlants = [
+        {
+            name: 'Одуванчик обыкновенный',
+            confidence: 94,
+            care: 'Обеспечьте яркое солнце, умеренный полив без застоя воды, рыхлую почву.',
+            light: 'Яркое солнце',
+            water: 'Умеренный',
+            temp: '18-25°C'
+        },
+        {
+            name: 'Роза садовая',
+            confidence: 88,
+            care: 'Требует много солнечного света, регулярный полив, обрезку отцветших бутонов.',
+            light: 'Очень яркое',
+            water: 'Регулярный',
+            temp: '20-28°C'
+        },
+        {
+            name: 'Кактус',
+            confidence: 92,
+            care: 'Прямое солнце, редкий полив, хорошо дренированная почва.',
+            light: 'Прямое солнце',
+            water: 'Редкий',
+            temp: '20-35°C'
+        }
+    ];
+    
+    const randomPlant = demoPlants[Math.floor(Math.random() * demoPlants.length)];
+    
+    // Обновляем UI
+    if (plantName) plantName.textContent = randomPlant.name;
+    if (plantConfidence) plantConfidence.textContent = `Точность: ${randomPlant.confidence}%`;
+    if (plantCareText) plantCareText.textContent = randomPlant.care;
+    if (lightInfo) lightInfo.textContent = randomPlant.light;
+    if (waterInfo) waterInfo.textContent = randomPlant.water;
+    if (tempInfo) tempInfo.textContent = randomPlant.temp;
+    
+    // Показываем уведомление
+    showNotification(`Растение определено: ${randomPlant.name}`, 'success');
+}
+
+// Функция показа уведомлений
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close"><i class="fas fa-times"></i></button>
+    `;
+    
+    // Стили
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#2ecc71' : type === 'error' ? '#e74c3c' : '#3498db'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 300px;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Автоудаление
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 3000);
+    
+    // Закрытие
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+        notification.remove();
+    });
+}
+
+// Добавляем CSS анимации
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .notification-close {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        margin-left: 10px;
+        opacity: 0.8;
+    }
+    .notification-close:hover {
+        opacity: 1;
+    }
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+`;
+document.head.appendChild(notificationStyles);
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('PlantCareAI загружается...');
+    initFileUpload();
+});
