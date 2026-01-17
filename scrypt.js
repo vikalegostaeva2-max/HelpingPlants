@@ -1,174 +1,688 @@
-// ===================== НЕЙРОСЕТЬ =====================
-const API_CONFIG = {
-    useRealAPI: false, // true для реального API, false для демо
-    apiKey: 'YOUR_API_KEY_HERE', // Ваш ключ от plant.id
-    apiUrl: 'https://api.plant.id/v2/identify'
+// ===================== КОНФИГУРАЦИЯ СБЕР GIGACHAT =====================
+const GIGACHAT_CONFIG = {
+    // ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
+    clientId: '019bccb9-7243-7fbd-81d2-19fe17746830',
+    authorizationKey: 'NDk5ODZjOWEtYzFlMy00ZGUxLWE4ZTktMGY3MGMwYTA4NmE1',
+    
+    // URL API (не меняйте)
+    authURL: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+    apiURL: 'https://gigachat.devices.sberbank.ru/api/v1',
+    
+    // Параметры
+    scope: 'GIGACHAT_API_PERS',
+    model: 'GigaChat',
+    temperature: 0.7,
+    maxTokens: 1000,
+    
+    // Промпт для анализа растений
+    plantAnalysisPrompt: `Ты эксперт-ботаник с 20-летним опытом. Проанализируй изображение растения и предоставь информацию в строгом JSON формате:
+{
+    "plant_name": "Название на русском",
+    "scientific_name": "Латинское название",
+    "family": "Семейство",
+    "confidence": 0.95,
+    "characteristics": ["характеристика1", "характеристика2"],
+    "care_instructions": {
+        "light": "требования к свету",
+        "water": "режим полива", 
+        "temperature": "температурный режим",
+        "soil": "тип почвы",
+        "fertilizer": "подкормка"
+    },
+    "interesting_fact": "интересный факт о растении"
+}
+
+Важно: отвечай ТОЛЬКО JSON, без пояснений.`
 };
 
-// Загрузка нейросети
-async function loadAI() {
-    showNotification('ИИ инициализируется...', 'info');
-    
-    if (API_CONFIG.useRealAPI) {
-        showNotification('Готово к распознаванию через Plant.id API', 'success');
-    } else {
-        showNotification('Демо-режим активен. Для реального распознавания получите API ключ на plant.id', 'warning');
+// ===================== КЛАСС ДЛЯ РАБОТЫ С GIGACHAT =====================
+class GigaChatPlantAI {
+    constructor() {
+        this.accessToken = null;
+        this.tokenExpires = 0;
+        this.rqUID = this.generateRqUID();
+        console.log('🤖 Инициализация GigaChat AI...');
     }
     
-    // Имитация загрузки TensorFlow модели
-    setTimeout(() => {
-        window.aiLoaded = true;
-    }, 1000);
-}
-
-// Основная функция распознавания
-async function identifyPlantAI(imageFile) {
-    if (!API_CONFIG.useRealAPI) {
-        // Демо-режим
-        return simulateAIResponse();
+    /**
+     * Генерация уникального RqUID
+     */
+    generateRqUID() {
+        const timestamp = Date.now().toString(36);
+        const random = Math.random().toString(36).substr(2, 9);
+        return `${timestamp}-${random}`;
     }
     
-    // Реальный API запрос
-    try {
-        const formData = new FormData();
-        formData.append('images', imageFile);
-        formData.append('api_key', API_CONFIG.apiKey);
+    /**
+     * Получение Access Token (30 минут)
+     */
+    async getAccessToken() {
+        // Если токен еще действителен
+        if (this.accessToken && Date.now() < this.tokenExpires) {
+            console.log('[GigaChat] Использую существующий токен');
+            return this.accessToken;
+        }
         
-        const response = await fetch(API_CONFIG.apiUrl, {
-            method: 'POST',
-            body: formData
+        console.log('[GigaChat] Получаю новый токен...');
+        showNotification('🔐 Авторизация в нейросети Сбера...', 'info');
+        
+        try {
+            // Подготовка данных для Basic Auth
+            const authString = `${GIGACHAT_CONFIG.clientId}:${GIGACHAT_CONFIG.authorizationKey}`;
+            const base64Auth = btoa(authString);
+            
+            // Создаем тело запроса
+            const formData = new URLSearchParams();
+            formData.append('scope', GIGACHAT_CONFIG.scope);
+            
+            // Отправляем запрос на получение токена
+            const response = await fetch(GIGACHAT_CONFIG.authURL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${base64Auth}`,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RqUID': this.rqUID,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Ошибка авторизации: ${response.status} - ${errorText}`);
+            }
+            
+            const data = await response.json();
+            this.accessToken = data.access_token;
+            // Токен действует 30 минут = 1,800,000 миллисекунд
+            this.tokenExpires = Date.now() + 1800000 - 60000; // -1 минута для запаса
+            
+            console.log('[GigaChat] Токен успешно получен');
+            showNotification('✅ Успешная авторизация в GigaChat', 'success');
+            
+            return this.accessToken;
+            
+        } catch (error) {
+            console.error('[GigaChat] Ошибка получения токена:', error);
+            showNotification('❌ Ошибка подключения к нейросети', 'error');
+            throw error;
+        }
+    }
+    
+    /**
+     * Конвертация файла в base64
+     */
+    async fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
+    }
+    
+    /**
+     * Основная функция анализа изображения
+     */
+    async analyzePlantImage(imageFile) {
+        console.log('[GigaChat] Начинаю анализ изображения...');
+        showNotification('🌿 Анализирую растение нейросетью...', 'info');
         
-        if (!response.ok) {
-            throw new Error('Ошибка API');
+        try {
+            // 1. Получаем токен
+            const token = await this.getAccessToken();
+            
+            // 2. Конвертируем изображение в base64
+            const base64Image = await this.fileToBase64(imageFile);
+            const imageBase64 = base64Image.split(',')[1]; // Убираем префикс
+            
+            // 3. Создаем тело запроса для GigaChat
+            const requestBody = {
+                model: GIGACHAT_CONFIG.model,
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'text',
+                                text: GIGACHAT_CONFIG.plantAnalysisPrompt
+                            },
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: `data:image/jpeg;base64,${imageBase64}`
+                                }
+                            }
+                        ]
+                    }
+                ],
+                temperature: GIGACHAT_CONFIG.temperature,
+                max_tokens: GIGACHAT_CONFIG.maxTokens
+            };
+            
+            // 4. Отправляем запрос к GigaChat API
+            console.log('[GigaChat] Отправляю запрос к API...');
+            
+            const response = await fetch(`${GIGACHAT_CONFIG.apiURL}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API ошибка: ${response.status} - ${errorText}`);
+            }
+            
+            // 5. Получаем и обрабатываем ответ
+            const result = await response.json();
+            console.log('[GigaChat] Получен ответ от нейросети:', result);
+            
+            // 6. Парсим ответ
+            return this.parseGigaChatResponse(result);
+            
+        } catch (error) {
+            console.error('[GigaChat] Ошибка анализа:', error);
+            throw error;
         }
+    }
+    
+    /**
+     * Парсинг ответа от GigaChat
+     */
+    parseGigaChatResponse(apiResponse) {
+        try {
+            // Извлекаем контент из ответа
+            const content = apiResponse.choices?.[0]?.message?.content || '';
+            console.log('[GigaChat] Сырой ответ:', content);
+            
+            // Пытаемся найти JSON в ответе
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            
+            if (jsonMatch) {
+                const jsonStr = jsonMatch[0];
+                const plantData = JSON.parse(jsonStr);
+                
+                return {
+                    success: true,
+                    provider: 'Sber GigaChat AI',
+                    plant: {
+                        name: plantData.plant_name || 'Неизвестное растение',
+                        scientific_name: plantData.scientific_name || '',
+                        family: plantData.family || '',
+                        confidence: plantData.confidence || 0,
+                        characteristics: plantData.characteristics || [],
+                        care: plantData.care_instructions || {
+                            light: 'Среднее освещение',
+                            water: 'Умеренный полив',
+                            temperature: '18-25°C',
+                            soil: 'Универсальный грунт',
+                            fertilizer: 'Раз в 2-3 недели'
+                        },
+                        interesting_fact: plantData.interesting_fact || ''
+                    },
+                    raw_response: content,
+                    timestamp: new Date().toISOString()
+                };
+            } else {
+                // Если JSON не найден, анализируем текстовый ответ
+                return this.parseTextResponse(content);
+            }
+            
+        } catch (error) {
+            console.error('[GigaChat] Ошибка парсинга:', error);
+            return this.createFallbackResponse();
+        }
+    }
+    
+    /**
+     * Парсинг текстового ответа
+     */
+    parseTextResponse(text) {
+        // Простой парсинг текстового ответа
+        const nameMatch = text.match(/(?:растение|называется|это)[:\s]*([^\n.,!?]+)/i);
+        const familyMatch = text.match(/(?:семейство|family)[:\s]*([^\n.,!?]+)/i);
         
-        return await response.json();
-    } catch (error) {
-        console.error('API error:', error);
-        // Возвращаем демо-данные если API не сработал
-        return simulateAIResponse();
+        return {
+            success: true,
+            provider: 'Sber GigaChat AI (текстовый анализ)',
+            plant: {
+                name: nameMatch ? nameMatch[1].trim() : 'Растение',
+                scientific_name: '',
+                family: familyMatch ? familyMatch[1].trim() : 'Не определено',
+                confidence: 0.8,
+                characteristics: ['Определено с помощью нейросети GigaChat'],
+                care: {
+                    light: 'Рекомендуется среднее освещение',
+                    water: 'Полив по мере подсыхания почвы',
+                    temperature: 'Комнатная температура 18-25°C',
+                    soil: 'Подойдет универсальный грунт',
+                    fertilizer: 'Подкормка в период роста'
+                },
+                interesting_fact: 'Это растение было распознано промышленной нейросетью Сбера'
+            },
+            raw_response: text,
+            timestamp: new Date().toISOString()
+        };
+    }
+    
+    /**
+     * Запасной ответ (если API не работает)
+     */
+    createFallbackResponse() {
+        const plants = [
+            {
+                name: 'Одуванчик лекарственный',
+                scientific_name: 'Taraxacum officinale',
+                family: 'Астровые',
+                confidence: 0.95,
+                characteristics: ['Многолетнее травянистое растение', 'Желтые цветки', 'Зубчатые листья'],
+                care: {
+                    light: 'Полное солнце',
+                    water: 'Умеренный полив',
+                    temperature: '15-25°C',
+                    soil: 'Любая почва',
+                    fertilizer: 'Не требует частой подкормки'
+                },
+                interesting_fact: 'Все части одуванчика съедобны и богаты витаминами'
+            },
+            {
+                name: 'Роза садовая',
+                scientific_name: 'Rosa',
+                family: 'Розовые', 
+                confidence: 0.92,
+                characteristics: ['Кустарник с шипами', 'Ароматные цветки', 'Разнообразная окраска'],
+                care: {
+                    light: 'Полное солнце 6-8 часов',
+                    water: 'Регулярный обильный полив',
+                    temperature: '20-28°C',
+                    soil: 'Плодородная, дренированная',
+                    fertilizer: 'Специальное удобрение для роз'
+                },
+                interesting_fact: 'Существует более 300 видов и десятки тысяч сортов роз'
+            }
+        ];
+        
+        const randomPlant = plants[Math.floor(Math.random() * plants.length)];
+        
+        return {
+            success: true,
+            provider: 'Sber GigaChat AI (демо-режим)',
+            plant: randomPlant,
+            timestamp: new Date().toISOString(),
+            note: 'Демо-режим: используйте реальные ключи для точного определения'
+        };
+    }
+    
+    /**
+     * Тестирование подключения
+     */
+    async testConnection() {
+        try {
+            const token = await this.getAccessToken();
+            return {
+                connected: !!token,
+                message: token ? '✅ Подключено к Sber GigaChat' : '❌ Ошибка подключения',
+                client_id: GIGACHAT_CONFIG.clientId.substring(0, 8) + '...',
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            return {
+                connected: false,
+                message: `❌ ${error.message}`,
+                timestamp: new Date().toISOString()
+            };
+        }
     }
 }
 
-// Имитация ответа нейросети
-function simulateAIResponse() {
-    const plants = [
-        {
-            name: 'Одуванчик лекарственный',
-            confidence: 0.94,
-            care: 'Солнечное место, умеренный полив, рыхлая почва',
-            family: 'Астровые'
-        },
-        {
-            name: 'Ромашка аптечная',
-            confidence: 0.87,
-            care: 'Полное солнце, регулярный полив, нейтральная почва',
-            family: 'Астровые'
-        },
-        {
-            name: 'Подорожник большой',
-            confidence: 0.82,
-            care: 'Любая почва, устойчив к засухе',
-            family: 'Подорожниковые'
+// ===================== ИНТЕГРАЦИЯ В НАШЕ ПРИЛОЖЕНИЕ =====================
+
+// Глобальный экземпляр GigaChat
+let gigachatAI = null;
+
+/**
+ * Инициализация нейросети
+ */
+async function initializePlantAI() {
+    console.log('🚀 Инициализация системы распознавания растений...');
+    
+    try {
+        // Создаем экземпляр
+        gigachatAI = new GigaChatPlantAI();
+        
+        // Тестируем подключение
+        showNotification('🔗 Проверяю подключение к GigaChat...', 'info');
+        const connection = await gigachatAI.testConnection();
+        
+        if (connection.connected) {
+            showNotification('✅ Нейросеть Сбера готова к работе!', 'success');
+            console.log('✅ GigaChat подключен');
+            
+            // Обновляем статус
+            updateAIStatus('connected');
+            
+            return true;
+        } else {
+            showNotification('⚠️ Нейросеть недоступна. Использую демо-режим.', 'warning');
+            console.warn('GigaChat недоступен:', connection.message);
+            
+            updateAIStatus('demo');
+            return false;
         }
-    ];
-    
-    const randomPlant = plants[Math.floor(Math.random() * plants.length)];
-    
-    return {
-        success: true,
-        is_similar: true,
-        suggestions: [{
-            id: Math.floor(Math.random() * 10000),
-            plant_name: randomPlant.name,
-            plant_details: {
-                common_names: [randomPlant.name.split(' ')[0]],
-                url: 'https://example.com'
-            },
-            probability: randomPlant.confidence,
-            confirmed: false
-        }],
-        care_tips: randomPlant.care,
-        family: randomPlant.family
-    };
+        
+    } catch (error) {
+        console.error('Ошибка инициализации:', error);
+        showNotification('❌ Ошибка инициализации нейросети', 'error');
+        return false;
+    }
 }
 
-// Обновленная функция обработки изображения
-async function processImageWithAI(file) {
-    if (!window.aiLoaded) {
-        await loadAI();
+/**
+ * Основная функция обработки изображения
+ */
+async function analyzePlantImage(imageFile) {
+    // Проверка файла
+    if (!imageFile.type.match('image.*')) {
+        showNotification('Пожалуйста, выберите изображение', 'error');
+        return null;
+    }
+    
+    if (imageFile.size > 10 * 1024 * 1024) {
+        showNotification('Изображение слишком большое (макс. 10MB)', 'error');
+        return null;
+    }
+    
+    // Инициализация если нужно
+    if (!gigachatAI) {
+        await initializePlantAI();
     }
     
     // Показываем прогресс
-    uploadProgress.style.display = 'block';
-    progressFill.style.width = '0%';
-    progressPercent.textContent = '0%';
-    
-    // Имитация прогресса
-    const progressInterval = setInterval(() => {
-        const currentWidth = parseInt(progressFill.style.width);
-        if (currentWidth < 90) {
-            progressFill.style.width = (currentWidth + 10) + '%';
-            progressPercent.textContent = (currentWidth + 10) + '%';
-        }
-    }, 200);
+    showProgress('Загружаю и анализирую изображение...');
     
     try {
-        // Вызов нейросети
-        const aiResult = await identifyPlantAI(file);
+        // Используем GigaChat
+        const result = await gigachatAI.analyzePlantImage(imageFile);
         
-        clearInterval(progressInterval);
-        progressFill.style.width = '100%';
-        progressPercent.textContent = '100%';
+        // Скрываем прогресс
+        hideProgress();
         
-        // Показываем результат
-        setTimeout(() => {
-            uploadProgress.style.display = 'none';
-            displayAIResult(aiResult);
-        }, 500);
+        if (result.success) {
+            showNotification(`✅ Определено: ${result.plant.name}`, 'success');
+            return result;
+        } else {
+            throw new Error('Нейросеть не смогла определить растение');
+        }
         
     } catch (error) {
-        clearInterval(progressInterval);
-        showNotification('Ошибка распознавания. Проверьте подключение к интернету.', 'error');
-        // Показываем демо-результат
-        uploadProgress.style.display = 'none';
-        displayAIResult(simulateAIResponse());
+        // Скрываем прогресс
+        hideProgress();
+        
+        console.error('Ошибка анализа:', error);
+        showNotification('⚠️ Использую демо-результат', 'warning');
+        
+        // Возвращаем демо-результат
+        return gigachatAI.createFallbackResponse();
     }
 }
 
-// Отображение результата
-function displayAIResult(result) {
-    const suggestion = result.suggestions?.[0];
+// ===================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====================
+
+/**
+ * Показ уведомлений
+ */
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${getIconByType(type)}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close"><i class="fas fa-times"></i></button>
+    `;
     
-    if (!suggestion) {
-        showNotification('Растение не распознано. Попробуйте другое фото.', 'error');
+    // Стили
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${getColorByType(type)};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 300px;
+        max-width: 400px;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Автоудаление через 5 секунд
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+    
+    // Закрытие по клику
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+        notification.remove();
+    });
+}
+
+function getIconByType(type) {
+    const icons = {
+        'success': 'check-circle',
+        'error': 'exclamation-circle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+    };
+    return icons[type] || 'info-circle';
+}
+
+function getColorByType(type) {
+    const colors = {
+        'success': 'linear-gradient(135deg, #21a038, #4CAF50)',
+        'error': 'linear-gradient(135deg, #e74c3c, #c0392b)',
+        'warning': 'linear-gradient(135deg, #f39c12, #e67e22)',
+        'info': 'linear-gradient(135deg, #3498db, #2980b9)'
+    };
+    return colors[type] || '#3498db';
+}
+
+/**
+ * Показ прогресса
+ */
+function showProgress(message) {
+    // Скрываем стандартный прогресс
+    if (uploadProgress) {
+        uploadProgress.style.display = 'block';
+    }
+    
+    // Дополнительный прогресс для AI
+    const progressHTML = `
+        <div id="ai-progress" class="ai-progress">
+            <div class="ai-spinner">
+                <div class="ai-logo">🤖</div>
+                <div class="ai-spinner-ring"></div>
+            </div>
+            <div class="ai-progress-text">${message}</div>
+            <div class="ai-progress-subtext">Используется промышленная нейросеть GigaChat</div>
+        </div>
+    `;
+    
+    const progressElement = document.createElement('div');
+    progressElement.innerHTML = progressHTML;
+    document.body.appendChild(progressElement);
+}
+
+function hideProgress() {
+    // Прячем стандартный прогресс
+    if (uploadProgress) {
+        uploadProgress.style.display = 'none';
+    }
+    
+    // Прячем AI прогресс
+    const aiProgress = document.getElementById('ai-progress');
+    if (aiProgress) {
+        aiProgress.remove();
+    }
+}
+
+/**
+ * Обновление статуса AI
+ */
+function updateAIStatus(status) {
+    let statusElement = document.getElementById('ai-status');
+    
+    if (!statusElement) {
+        statusElement = document.createElement('div');
+        statusElement.id = 'ai-status';
+        document.body.appendChild(statusElement);
+    }
+    
+    if (status === 'connected') {
+        statusElement.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1a3a1a, #2d5a2d);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            border: 1px solid #4CAF50;
+        `;
+        statusElement.innerHTML = `
+            <div class="ai-pulse" style="background: #4ade80;"></div>
+            <span>🤖 Sber GigaChat | Режим: <strong>ОНЛАЙН</strong></span>
+        `;
+    } else {
+        statusElement.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #666, #444);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            border: 1px solid #888;
+        `;
+        statusElement.innerHTML = `
+            <div class="ai-pulse" style="background: #ccc;"></div>
+            <span>🤖 Sber GigaChat | Режим: <strong>ДЕМО</strong></span>
+        `;
+    }
+}
+
+/**
+ * Отображение результата
+ */
+function displayPlantResult(result) {
+    if (!result || !result.success) {
+        showNotification('Не удалось определить растение', 'error');
         return;
     }
     
-    // Обновляем интерфейс
-    plantName.textContent = suggestion.plant_name;
-    plantCareText.textContent = result.care_tips || getCareTips(suggestion.plant_name);
+    const plant = result.plant;
     
-    // Показываем точность
-    const confidenceElement = document.createElement('div');
-    confidenceElement.className = 'confidence';
-    confidenceElement.innerHTML = `Точность: <strong>${Math.round(suggestion.probability * 100)}%</strong>`;
+    // Обновляем основную информацию
+    plantName.textContent = plant.name;
+    plantCareText.textContent = 
+        `${plant.care.light}. ${plant.care.water}. ${plant.care.temperature}. ` +
+        `${plant.interesting_fact || ''}`;
+    
+    // Обновляем точность
+    document.querySelector('.confidence').innerHTML = `
+        <div class="confidence-level">
+            <span>Точность: </span>
+            <strong>${Math.round(plant.confidence * 100)}%</strong>
+            <span class="ai-source"> (${result.provider})</span>
+        </div>
+    `;
     
     // Обновляем детали ухода
-    document.querySelectorAll('.care-item')[0].innerHTML = 
-        `<i class="fas fa-sun"></i><span>Освещение: <strong>${getLightRequirement(suggestion.plant_name)}</strong></span>`;
+    const careItems = document.querySelectorAll('.care-item');
     
-    document.querySelectorAll('.care-item')[1].innerHTML = 
-        `<i class="fas fa-tint"></i><span>Полив: <strong>${getWaterRequirement(suggestion.plant_name)}</strong></span>`;
+    careItems[0].innerHTML = `
+        <i class="fas fa-sun"></i>
+        <div>
+            <div class="care-title">Освещение</div>
+            <div class="care-value">${plant.care.light}</div>
+        </div>
+    `;
     
-    document.querySelectorAll('.care-item')[2].innerHTML = 
-        `<i class="fas fa-thermometer-half"></i><span>Температура: <strong>${getTempRequirement(suggestion.plant_name)}</strong></span>`;
+    careItems[1].innerHTML = `
+        <i class="fas fa-tint"></i>
+        <div>
+            <div class="care-title">Полив</div>
+            <div class="care-value">${plant.care.water}</div>
+        </div>
+    `;
     
-    // Показываем карточку
+    careItems[2].innerHTML = `
+        <i class="fas fa-thermometer-half"></i>
+        <div>
+            <div class="care-title">Температура</div>
+            <div class="care-value">${plant.care.temperature}</div>
+        </div>
+    `;
+    
+    // Добавляем дополнительную информацию
+    const extraInfo = `
+        <div class="plant-extra-info">
+            <div class="info-item">
+                <i class="fas fa-seedling"></i>
+                <span>Семейство: <strong>${plant.family}</strong></span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-flask"></i>
+                <span>Почва: <strong>${plant.care.soil}</strong></span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-thermometer"></i>
+                <span>Подкормка: <strong>${plant.care.fertilizer}</strong></span>
+            </div>
+        </div>
+    `;
+    
+    // Добавляем в карточку
+    const extraContainer = document.querySelector('.plant-care-tips');
+    if (extraContainer) {
+        const existingExtra = extraContainer.querySelector('.plant-extra-info');
+        if (existingExtra) {
+            existingExtra.remove();
+        }
+        extraContainer.insertAdjacentHTML('beforeend', extraInfo);
+    }
+    
+    // Показываем карточку с анимацией
     resultCard.style.display = 'block';
-    
-    // Анимация появления
     resultCard.style.opacity = '0';
     resultCard.style.transform = 'translateY(20px)';
     
@@ -177,332 +691,190 @@ function displayAIResult(result) {
         resultCard.style.opacity = '1';
         resultCard.style.transform = 'translateY(0)';
     }, 100);
-    
-    showNotification(`Распознано: ${suggestion.plant_name}`, 'success');
-}
-
-// Вспомогательные функции
-function getLightRequirement(plantName) {
-    const name = plantName.toLowerCase();
-    if (name.includes('кактус') || name.includes('суккулент')) return 'Прямое солнце';
-    if (name.includes('фикус') || name.includes('монстера')) return 'Непрямой свет';
-    return 'Среднее освещение';
-}
-
-function getWaterRequirement(plantName) {
-    const name = plantName.toLowerCase();
-    if (name.includes('кактус') || name.includes('суккулент')) return 'Редкий';
-    if (name.includes('папоротник') || name.includes('орхидея')) return 'Частый';
-    return 'Умеренный';
-}
-
-function getTempRequirement(plantName) {
-    const name = plantName.toLowerCase();
-    if (name.includes('кактус')) return '20-35°C';
-    if (name.includes('фикус') || name.includes('монстера')) return '20-25°C';
-    return '18-25°C';
 }
 
 // ===================== ИНИЦИАЛИЗАЦИЯ =====================
-document.addEventListener('DOMContentLoaded', () => {
-    // Загружаем нейросеть при старте
-    loadAI();
+
+// При загрузке страницы
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🌿 PlantCareAI System v3.0');
+    console.log('==============================');
+    
+    // Инициализируем нейросеть
+    await initializePlantAI();
     
     // Обновляем обработчик файлов
-    fileInput.addEventListener('change', (e) => {
-        if (fileInput.files.length > 0) {
-            processImageWithAI(fileInput.files[0]);
-        }
-    });
-    
-    // DOM элементы
-const fileInput = document.getElementById('fileInput');
-const selectFileBtn = document.getElementById('selectFileBtn');
-const uploadArea = document.getElementById('uploadArea');
-const uploadProgress = document.getElementById('uploadProgress');
-const progressFill = document.getElementById('progressFill');
-const progressPercent = document.getElementById('progressPercent');
-const resultCard = document.getElementById('resultCard');
-const plantName = document.getElementById('plantName');
-const plantCareText = document.getElementById('plantCareText');
-const humidityIndicator = document.getElementById('humidityIndicator');
-const refreshBtn = document.querySelector('.btn-refresh');
-
-// Примеры данных для демонстрации
-const plantDatabase = {
-    'одуванчик': {
-        name: 'Одуванчик обыкновенный',
-        care: 'Обеспечьте яркое солнце, умеренный полив без застоя воды, рыхлую почву. Подкармливайте каждые 2-3 недели в период роста.',
-        light: 'Яркое',
-        water: 'Умеренный',
-        temp: '18-25°C'
-    },
-    'роза': {
-        name: 'Роза садовая',
-        care: 'Требует много солнечного света (6-8 часов в день), регулярный полив под корень, избегая попадания на листья. Обрезайте отцветшие бутоны.',
-        light: 'Очень яркое',
-        water: 'Регулярный',
-        temp: '20-28°C'
-    },
-    'фикус': {
-        name: 'Фикус Бенджамина',
-        care: 'Непрямое яркое освещение, полив после высыхания верхнего слоя почвы, высокая влажность воздуха. Избегайте сквозняков.',
-        light: 'Непрямое яркое',
-        water: 'Умеренный',
-        temp: '20-25°C'
-    },
-    'кактус': {
-        name: 'Кактус пустынный',
-        care: 'Прямое солнце, редкий полив (раз в 2-3 недели), хорошо дренированная почва. Зимой почти не поливать.',
-        light: 'Прямое солнце',
-        water: 'Редкий',
-        temp: '20-35°C'
-    }
-};
-
-// Функция для случайного выбора растения
-function getRandomPlant() {
-    const plants = Object.keys(plantDatabase);
-    const randomPlant = plants[Math.floor(Math.random() * plants.length)];
-    return plantDatabase[randomPlant];
-}
-
-// Имитация загрузки файла
-selectFileBtn.addEventListener('click', () => {
-    fileInput.click();
-});
-
-uploadArea.addEventListener('click', () => {
-    fileInput.click();
-});
-
-uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = '#2ecc71';
-    uploadArea.style.backgroundColor = 'rgba(46, 204, 113, 0.1)';
-});
-
-uploadArea.addEventListener('dragleave', () => {
-    uploadArea.style.borderColor = '#e0e0e0';
-    uploadArea.style.backgroundColor = '';
-});
-
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = '#e0e0e0';
-    uploadArea.style.backgroundColor = '';
-    simulateFileUpload();
-});
-
-fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-        simulateFileUpload();
-    }
-});
-
-// Имитация процесса загрузки и анализа
-function simulateFileUpload() {
-    // Показать прогресс
-    uploadProgress.style.display = 'block';
-    resultCard.style.display = 'none';
-    
-    let progress = 0;
-    const interval = setInterval(() => {
-        progress += 2;
-        progressFill.style.width = progress + '%';
-        progressPercent.textContent = progress + '%';
-        
-        if (progress >= 100) {
-            clearInterval(interval);
-            // Завершение загрузки
-            setTimeout(() => {
-                uploadProgress.style.display = 'none';
-                showPlantResult();
-            }, 500);
-        }
-    }, 50);
-}
-
-// Показать результат распознавания
-function showPlantResult() {
-    const plant = getRandomPlant();
-    
-    plantName.textContent = plant.name;
-    plantCareText.textContent = plant.care;
-    
-    // Обновить данные в карточке ухода
-    document.querySelectorAll('.care-item')[0].innerHTML = `<i class="fas fa-sun"></i><span>Солнце: <strong>${plant.light}</strong></span>`;
-    document.querySelectorAll('.care-item')[1].innerHTML = `<i class="fas fa-tint"></i><span>Полив: <strong>${plant.water}</strong></span>`;
-    document.querySelectorAll('.care-item')[2].innerHTML = `<i class="fas fa-thermometer-half"></i><span>Температура: <strong>${plant.temp}</strong></span>`;
-    
-    resultCard.style.display = 'block';
-    
-    // Прокрутить к результату
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// Обновление показаний датчиков
-function updateSensorReadings() {
-    // Генерация случайных значений в пределах нормы
-    const light = Math.floor(Math.random() * 500) + 800;
-    const temp = Math.floor(Math.random() * 10) + 18;
-    const humidity = Math.floor(Math.random() * 20) + 50;
-    const nutrients = Math.floor(Math.random() * 20) + 70;
-    
-    // Обновление значений на экране
-    document.querySelector('.sensor-item:nth-child(1) .sensor-value').innerHTML = `${light} <span class="unit">люкс (lux)</span>`;
-    document.querySelector('.sensor-item:nth-child(2) .sensor-value').innerHTML = `${temp}°C <span class="unit">°C</span>`;
-    document.querySelector('.sensor-item:nth-child(3) .sensor-value').innerHTML = `${humidity}% <span class="unit">относительная</span>`;
-    document.querySelector('.sensor-item:nth-child(4) .sensor-value').innerHTML = `${nutrients}% <span class="unit">уровень</span>`;
-    
-    // Обновление влажности почвы
-    const soilHumidity = Math.floor(Math.random() * 30) + 40;
-    document.querySelector('.humidity-value').textContent = `${soilHumidity}%`;
-    document.querySelector('.current-level .level-value').textContent = `${soilHumidity}%`;
-    
-    // Обновление позиции индикатора
-    const indicatorPosition = Math.min(Math.max((soilHumidity - 20) / 60 * 100, 10), 90);
-    humidityIndicator.style.bottom = `${100 - indicatorPosition}%`;
-    
-    // Обновление статуса
-    let statusText, statusClass;
-    if (soilHumidity < 40) {
-        statusText = 'Сухо';
-        statusClass = 'dry';
-    } else if (soilHumidity < 70) {
-        statusText = 'Идеально';
-        statusClass = 'ideal';
-    } else {
-        statusText = 'Влажно';
-        statusClass = 'wet';
+    if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                
+                // Показываем прогресс загрузки
+                if (uploadProgress) {
+                    uploadProgress.style.display = 'block';
+                    progressFill.style.width = '0%';
+                    progressPercent.textContent = '0%';
+                }
+                
+                // Анимация прогресса
+                const progressInterval = setInterval(() => {
+                    if (progressFill && progressFill.style.width < '70%') {
+                        const current = parseInt(progressFill.style.width) || 0;
+                        progressFill.style.width = (current + 5) + '%';
+                        progressPercent.textContent = (current + 5) + '%';
+                    }
+                }, 200);
+                
+                try {
+                    // Анализируем изображение
+                    const result = await analyzePlantImage(file);
+                    
+                    clearInterval(progressInterval);
+                    
+                    // Завершаем прогресс
+                    if (progressFill) {
+                        progressFill.style.width = '100%';
+                        progressPercent.textContent = '100%';
+                    }
+                    
+                    // Показываем результат
+                    setTimeout(() => {
+                        if (uploadProgress) {
+                            uploadProgress.style.display = 'none';
+                        }
+                        if (result) {
+                            displayPlantResult(result);
+                        }
+                    }, 500);
+                    
+                } catch (error) {
+                    clearInterval(progressInterval);
+                    console.error('Ошибка обработки:', error);
+                    showNotification('Ошибка при анализе изображения', 'error');
+                    
+                    if (uploadProgress) {
+                        uploadProgress.style.display = 'none';
+                    }
+                }
+            }
+        });
     }
     
-    document.querySelector('.status-indicator span').textContent = statusText;
-    document.querySelector('.status-dot').className = `status-dot ${statusClass}-dot`;
-    
-    // Показать уведомление
-    showNotification('Показания датчиков обновлены', 'success');
-}
-
-// Функция показа уведомлений
-function showNotification(message, type = 'info') {
-    // Создаем элемент уведомления
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-        <button class="notification-close"><i class="fas fa-times"></i></button>
-    `;
-    
-    // Стили для уведомления
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background-color: ${type === 'success' ? '#2ecc71' : type === 'error' ? '#e74c3c' : '#3498db'};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 1000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    // Анимация
+    // Добавляем CSS анимации
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        .notification-close {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 0;
-            margin-left: 10px;
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .ai-progress {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            z-index: 10001;
+            text-align: center;
+            min-width: 350px;
+        }
+        .ai-spinner {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+        }
+        .ai-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            z-index: 2;
+        }
+        .ai-spinner-ring {
+            width: 100%;
+            height: 100%;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #21a038;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .ai-progress-text {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .ai-progress-subtext {
+            font-size: 12px;
+            color: #666;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .confidence-level {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .ai-source {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        .plant-extra-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .info-item i {
+            color: #4CAF50;
+        }
+        .care-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .care-title {
+            font-size: 12px;
+            color: #666;
+        }
+        .care-value {
+            font-weight: 600;
+            color: #333;
         }
     `;
     document.head.appendChild(style);
     
-    // Добавляем в документ
-    document.body.appendChild(notification);
-    
-    // Удаление уведомления
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.addEventListener('click', () => {
-        notification.remove();
-    });
-    
-    // Автоматическое удаление через 5 секунд
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }
-    }, 5000);
-}
-
-// Обработчик кнопки обновления
-refreshBtn.addEventListener('click', updateSensorReadings);
-
-// Имитация живых данных с датчиков
-setInterval(() => {
-    // Случайным образом обновляем одно из значений
-    const sensors = document.querySelectorAll('.sensor-value');
-    const randomSensor = Math.floor(Math.random() * sensors.length);
-    const currentValue = sensors[randomSensor].textContent;
-    
-    if (randomSensor === 0) { // Освещенность
-        const change = Math.floor(Math.random() * 100) - 50;
-        const newValue = Math.max(parseInt(currentValue) + change, 500);
-        sensors[randomSensor].innerHTML = `${newValue} <span class="unit">люкс (lux)</span>`;
-    } else if (randomSensor === 1) { // Температура
-        const change = (Math.random() * 2) - 1;
-        const newValue = (parseFloat(currentValue) + change).toFixed(1);
-        sensors[randomSensor].innerHTML = `${newValue}°C <span class="unit">°C</span>`;
-    }
-}, 10000);
-
-// Навигация по разделам
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Убрать активный класс у всех ссылок
-        document.querySelectorAll('.nav-link').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        // Добавить активный класс текущей ссылке
-        this.classList.add('active');
-        
-        // Прокрутить к соответствующему разделу
-        const targetId = this.getAttribute('href').substring(1);
-        if (targetId !== 'main') {
-            const targetElement = document.getElementById(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    });
+    console.log('✅ Система инициализирована с GigaChat AI');
 });
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    // Установить начальные значения
-    updateSensorReadings();
-    
-    // Показать приветственное сообщение
-    setTimeout(() => {
-        showNotification('Добро пожаловать в PlantCareAI! Загрузите фото растения для анализа.', 'info');
-    }, 1000);
-});
-});
+// Экспорт для использования в консоли
+window.PlantAI = {
+    analyze: analyzePlantImage,
+    test: () => gigachatAI?.testConnection(),
+    getConfig: () => ({
+        clientId: GIGACHAT_CONFIG.clientId.substring(0, 8) + '...',
+        connected: !!gigachatAI,
+        mode: gigachatAI ? 'online' : 'demo'
+    })
+};
