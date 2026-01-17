@@ -328,11 +328,70 @@
                 <div class="footer-links">
                     <a href="#"><i class="fab fa-github"></i> GitHub</a>
                     <a href="#"><i class="fas fa-book"></i> Документация</a>
-                    <a href="#"><i class="fas fa-users"></i> О команде</a>
                 </div>
             </div>
         </footer>
     </div>
+    <section class="card identification-card">
+    <div class="card-header">
+        <h2><i class="fas fa-camera"></i> Распознавание растений</h2>
+        <div class="card-subtitle">Загрузите фото растения</div>
+    </div>
+    
+    <div class="upload-area" id="uploadArea">
+        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+        <p class="upload-text">Перетащите изображение сюда или нажмите для выбора</p>
+        <button class="btn-select-file" id="selectFileBtn">
+            <i class="fas fa-folder-open"></i> Выбрать файл
+        </button>
+        <p class="file-info">Поддерживаются: JPG, PNG, размер до 10MB</p>
+        <input type="file" id="fileInput" accept="image/*" hidden>
+    </div>
+    
+    <!-- Прогресс бар (скрыт по умолчанию) -->
+    <div class="upload-progress" id="uploadProgress" style="display: none;">
+        <div class="progress-header">
+            <span>Загрузка и анализ</span>
+            <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-status">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Идентификация растения...</span>
+        </div>
+    </div>
+    
+    <!-- Результат (скрыт по умолчанию) -->
+    <div class="result-card" id="resultCard" style="display: none;">
+        <div class="plant-header">
+            <div class="plant-icon"><i class="fas fa-leaf"></i></div>
+            <div>
+                <h3 id="plantName">Растение</h3>
+                <div class="confidence" id="plantConfidence">Точность: 0%</div>
+            </div>
+        </div>
+        <div class="plant-care-tips">
+            <h4><i class="fas fa-lightbulb"></i> Рекомендации по уходу:</h4>
+            <p id="plantCareText">Загрузите фото для получения рекомендаций</p>
+        </div>
+        <div class="care-details">
+            <div class="care-item">
+                <i class="fas fa-sun"></i>
+                <span>Освещение: <strong id="lightInfo">-</strong></span>
+            </div>
+            <div class="care-item">
+                <i class="fas fa-tint"></i>
+                <span>Полив: <strong id="waterInfo">-</strong></span>
+            </div>
+            <div class="care-item">
+                <i class="fas fa-thermometer-half"></i>
+                <span>Температура: <strong id="tempInfo">-</strong></span>
+            </div>
+        </div>
+    </div>
+</section>
 <!-- TensorFlow.js -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
