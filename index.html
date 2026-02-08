@@ -3,38 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HelpingPlantsAI - Умный помощник для растений</title>
+    <title>HelpingPlantsA - Умный помощник для растений</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HelpingPlantsAI - Умный помощник для растений</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
+    <!-- Модальные окна -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user"></i> Вход / Регистрация</h2>
+                <button class="modal-close" id="closeAuthModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Вход</button>
+                    <button class="auth-tab" data-tab="register">Регистрация</button>
+                </div>
+                
+                <form id="loginForm" class="auth-form active">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" placeholder="Ваш email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Пароль</label>
+                        <input type="password" id="loginPassword" placeholder="Пароль" required>
+                    </div>
+                    <button type="submit" class="btn-auth">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </button>
+                </form>
+                
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" placeholder="Ваш email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerUsername">Имя пользователя</label>
+                        <input type="text" id="registerUsername" placeholder="Придумайте имя" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Пароль</label>
+                        <input type="password" id="registerPassword" placeholder="Не менее 6 символов" minlength="6" required>
+                    </div>
+                    <button type="submit" class="btn-auth">
+                        <i class="fas fa-user-plus"></i> Зарегистрироваться
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content wide">
+            <div class="modal-header">
+                <h2><i class="fas fa-history"></i> История ваших растений</h2>
+                <button class="modal-close" id="closeHistoryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="historyList" class="history-list">
+                    <div class="empty-history">
+                        <i class="fas fa-leaf"></i>
+                        <p>У вас пока нет истории распознавания</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной контейнер -->
     <div class="container">
         <!-- Шапка сайта -->
         <header class="header">
             <div class="logo">
                 <i class="fas fa-seedling"></i>
-                <span>HelpingPlants<span class="ai-text">AI</span></span>
+                <span>PlantHelper<span class="ai-text">AI</span></span>
             </div>
             <nav class="nav">
                 <a href="#main" class="nav-link active"><i class="fas fa-home"></i> Главная</a>
                 <a href="#identification" class="nav-link"><i class="fas fa-camera"></i> Определение</a>
-                <a href="#sensors" class="nav-link"><i class="fas fa-microchip"></i> Датчики</a>
+                <a href="#historyBtn" class="nav-link" id="historyNavBtn"><i class="fas fa-history"></i> История</a>
                 <a href="#care" class="nav-link"><i class="fas fa-tint"></i> Уход</a>
             </nav>
             <div class="user-menu">
-                <button class="btn-notification"><i class="fas fa-bell"></i></button>
-                <div class="user-avatar">У</div>
+                <button class="btn-notification" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">0</span>
+                </button>
+                <div class="user-avatar" id="userAvatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <button class="btn-login" id="loginBtn">Войти</button>
+                <button class="btn-logout" id="logoutBtn">Выйти</button>
             </div>
         </header>
 
@@ -43,7 +106,10 @@
             <!-- Приветственный блок -->
             <section class="welcome-section">
                 <h1><i class="fas fa-robot"></i> Умный помощник для растений</h1>
-                <p class="subtitle">ИИ анализирует состояние растений и рекомендует оптимальный уход</p>
+                <p class="subtitle">Наша нейросеть анализирует состояние растений и рекомендует оптимальный уход</p>
+                <div class="user-welcome" id="userWelcome" style="display: none;">
+                    <p>Добро пожаловать, <span id="userName">Пользователь</span>!</p>
+                </div>
             </section>
 
             <div class="dashboard-grid">
@@ -66,8 +132,16 @@
                             <input type="file" id="fileInput" accept="image/*" hidden>
                         </div>
 
-                        <!-- Прогресс загрузки (скрыт по умолчанию) -->
-                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <!-- Предпросмотр изображения -->
+                        <div class="image-preview" id="imagePreview" style="display: none;">
+                            <img id="previewImage" src="" alt="Предпросмотр">
+                            <button class="btn-remove-preview" id="removePreviewBtn">
+                                <i class="fas fa-times"></i> Удалить
+                            </button>
+                        </div>
+
+                        <!-- Прогресс загрузки -->
+                        <div class="upload-progress" id="uploadProgress">
                             <div class="progress-header">
                                 <span>Загрузка и анализ</span>
                                 <span id="progressPercent">0%</span>
@@ -82,12 +156,12 @@
                         </div>
 
                         <!-- Результат распознавания -->
-                        <div class="result-card" id="resultCard" style="display: none;">
+                        <div class="result-card" id="resultCard">
                             <div class="plant-header">
                                 <div class="plant-icon"><i class="fas fa-leaf"></i></div>
                                 <div>
                                     <h3 id="plantName">Одуванчик обыкновенный</h3>
-                                    <div class="confidence" id="plantConfidence">Точность: 94% | <span id="aiSource">Sber GigaChat</span></div>
+                                    <div class="confidence" id="plantConfidence">Точность: 94%</div>
                                 </div>
                             </div>
                             <div class="plant-care-tips">
@@ -108,7 +182,7 @@
                                     <span>Температура: <strong id="tempInfo">18-25°C</strong></span>
                                 </div>
                             </div>
-                            <div class="plant-extra-info" id="plantExtraInfo" style="display: none;">
+                            <div class="plant-extra-info" id="plantExtraInfo">
                                 <div class="info-item">
                                     <i class="fas fa-seedling"></i>
                                     <span>Семейство: <strong id="familyInfo">Астровые</strong></span>
@@ -118,6 +192,9 @@
                                     <span>Почва: <strong id="soilInfo">Универсальная</strong></span>
                                 </div>
                             </div>
+                            <button class="btn-save-result" id="saveResultBtn">
+                                <i class="fas fa-save"></i> Сохранить в историю
+                            </button>
                         </div>
                     </section>
 
@@ -134,7 +211,8 @@
                                 <div class="humidity-indicator" id="humidityIndicator">
                                     <div class="humidity-value" id="humidityValue">47%</div>
                                 </div>
-                                <div class="scale-mark ideal">Сухо</div>
+                                <div class="scale-mark ideal">Идеально</div>
+                                <div class="scale-mark wet">Мокро</div>
                             </div>
                             
                             <div class="humidity-info">
@@ -143,8 +221,8 @@
                                     <div class="level-value" id="currentHumidity">47%</div>
                                 </div>
                                 <div class="status-indicator">
-                                    <div class="status-dot ideal-dot"></div>
-                                    <span id="humidityStatus">Сухо</span>
+                                    <div class="status-dot" id="humidityDot"></div>
+                                    <span id="humidityStatus">Умеренно</span>
                                 </div>
                             </div>
                         </div>
@@ -158,14 +236,14 @@
                                     <span class="control-status">Норма</span>
                                 </div>
                                 <div class="control-slider">
-                                    <div class="slider-fill" style="width: 40%;"></div>
+                                    <div class="slider-fill" id="waterNeedFill" style="width: 40%;"></div>
                                 </div>
                             </div>
                             
                             <div class="control-item">
                                 <div class="control-label">
                                     <span>Автополив</span>
-                                    <span class="control-status active">Автоматический режим</span>
+                                    <span class="control-status">Автоматический режим</span>
                                 </div>
                                 <label class="switch">
                                     <input type="checkbox" id="autoWatering" checked>
@@ -186,8 +264,8 @@
                             
                             <div class="control-item">
                                 <div class="control-label">
-                                    <span>Режим ИИ</span>
-                                    <span class="control-status" id="aiModeStatus">Sber GigaChat</span>
+                                    <span>Режим AI</span>
+                                    <span class="control-status">Включен</span>
                                 </div>
                                 <label class="switch">
                                     <input type="checkbox" id="aiMode" checked>
@@ -205,7 +283,7 @@
                 <!-- Правая колонка -->
                 <div class="right-column">
                     <!-- Блок показаний сенсоров -->
-                    <section class="card sensors-card" id="sensors">
+                    <section class="card sensors-card">
                         <div class="card-header">
                             <h2><i class="fas fa-microchip"></i> Показания сенсоров</h2>
                             <div class="card-subtitle">Данные с датчиков в реальном времени</div>
@@ -218,7 +296,7 @@
                                 </div>
                                 <div class="sensor-info">
                                     <div class="sensor-name">Освещённость</div>
-                                    <div class="sensor-value" id="lightSensor">1180 <span class="unit">люкс (lux)</span></div>
+                                    <div class="sensor-value" id="lightSensor">1180 <span class="unit">люкс</span></div>
                                 </div>
                                 <div class="sensor-status excellent">
                                     <i class="fas fa-check-circle"></i> <span class="sensor-status-text">Отлично</span>
@@ -231,7 +309,7 @@
                                 </div>
                                 <div class="sensor-info">
                                     <div class="sensor-name">Температура</div>
-                                    <div class="sensor-value" id="tempSensor">20°C <span class="unit">°C</span></div>
+                                    <div class="sensor-value" id="tempSensor">20°C</div>
                                 </div>
                                 <div class="sensor-status ideal">
                                     <i class="fas fa-check-circle"></i> <span class="sensor-status-text">Идеально</span>
@@ -244,7 +322,7 @@
                                 </div>
                                 <div class="sensor-info">
                                     <div class="sensor-name">Влажность воздуха</div>
-                                    <div class="sensor-value" id="airHumiditySensor">62% <span class="unit">относительная</span></div>
+                                    <div class="sensor-value" id="airHumiditySensor">62%</div>
                                 </div>
                                 <div class="sensor-status normal">
                                     <i class="fas fa-info-circle"></i> <span class="sensor-status-text">Нормальная</span>
@@ -257,7 +335,7 @@
                                 </div>
                                 <div class="sensor-info">
                                     <div class="sensor-name">Питательные вещества</div>
-                                    <div class="sensor-value" id="nutrientsSensor">80% <span class="unit">уровень</span></div>
+                                    <div class="sensor-value" id="nutrientsSensor">80%</div>
                                 </div>
                                 <div class="sensor-status good">
                                     <i class="fas fa-check-circle"></i> <span class="sensor-status-text">Достаточно</span>
@@ -268,62 +346,20 @@
                         <div class="sensor-history">
                             <h3><i class="fas fa-chart-line"></i> История показаний</h3>
                             <div class="history-chart">
-                                <div class="chart-placeholder">
-                                    <p>График изменения показателей за последние 7 дней</p>
-                                    <div class="chart-bars">
-                                        <div class="chart-bar" style="height: 70%;"></div>
-                                        <div class="chart-bar" style="height: 85%;"></div>
-                                        <div class="chart-bar" style="height: 65%;"></div>
-                                        <div class="chart-bar" style="height: 90%;"></div>
-                                        <div class="chart-bar" style="height: 75%;"></div>
-                                        <div class="chart-bar" style="height: 80%;"></div>
-                                        <div class="chart-bar" style="height: 69%;"></div>
-                                    </div>
-                                </div>
+                                <canvas id="sensorChart"></canvas>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Блок рекомендаций ИИ -->
+                    <!-- Блок рекомендаций -->
                     <section class="card ai-recommendations">
                         <div class="card-header">
-                            <h2><i class="fas fa-robot"></i> Рекомендации ИИ</h2>
+                            <h2><i class="fas fa-robot"></i> Рекомендации системы</h2>
                             <div class="card-subtitle">Персонализированные советы по уходу</div>
                         </div>
                         
                         <div class="recommendation-list" id="recommendationList">
-                            <div class="recommendation-item">
-                                <div class="rec-icon urgent">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div class="rec-content">
-                                    <h4>Пора полить растение</h4>
-                                    <p>Влажность почвы опустилась до 40%. Рекомендуем полив 200 мл воды.</p>
-                                    <div class="rec-time"><i class="far fa-clock"></i> 2 часа назад</div>
-                                </div>
-                            </div>
-                            
-                            <div class="recommendation-item">
-                                <div class="rec-icon warning">
-                                    <i class="fas fa-sun"></i>
-                                </div>
-                                <div class="rec-content">
-                                    <h4>Увеличьте освещение</h4>
-                                    <p>Растение получает недостаточно света. Переместите его ближе к окну.</p>
-                                    <div class="rec-time"><i class="far fa-clock"></i> 5 часов назад</div>
-                                </div>
-                            </div>
-                            
-                            <div class="recommendation-item">
-                                <div class="rec-icon info">
-                                    <i class="fas fa-seedling"></i>
-                                </div>
-                                <div class="rec-content">
-                                    <h4>Пора для подкормки</h4>
-                                    <p>Через 3 дня рекомендуем внести удобрение для цветущих растений.</p>
-                                    <div class="rec-time"><i class="far fa-clock"></i> 1 день назад</div>
-                                </div>
-                            </div>
+                            <!-- Рекомендации загружаются динамически -->
                         </div>
                         
                         <button class="btn-view-all" id="viewAllBtn">
@@ -339,18 +375,14 @@
             <div class="footer-content">
                 <div class="footer-logo">
                     <i class="fas fa-seedling"></i>
-                    <span>HelpingPlants<span class="ai-text">AI</span></span>
+                    <span>HelpingPlant<span class="ai-text">AI</span></span>
                 </div>
                 <div class="footer-info">
-                    <p>Школьный проект • Умная система ухода за растениями</p>
+                    <p>Умная система ухода за растениями</p>
                     <p class="copyright" id="currentYear">© 2025 HelpingPlantsAI</p>
                 </div>
                 <div class="footer-links">
-                    <!-- Вставьте ваши реальные ссылки -->
-                    <a href="https://github.com/ваш_логин/HelpingPlantsAI" target="_blank">
-                        <i class="fab fa-github"></i> GitHub
-                    </a>
-                    <a href="docs.html" target="_blank">
+                    <a href="#" id="docsLink">
                         <i class="fas fa-book"></i> Документация
                     </a>
                 </div>
@@ -363,12 +395,15 @@
         <div class="ai-status-content">
             <div class="ai-status-icon">🤖</div>
             <div class="ai-status-text">
-                <div class="ai-status-title">Sber GigaChat AI</div>
-                <div class="ai-status-subtitle" id="aiStatusText">Подключение к нейросети...</div>
+                <div class="ai-status-title">HelpingPlantsA</div>
+                <div class="ai-status-subtitle" id="aiStatusText">Система готова к работе</div>
             </div>
         </div>
     </div>
 
+    <!-- Подключение библиотек -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js"></script>
     <script src="script.js"></script>
 </body>
 </html>
