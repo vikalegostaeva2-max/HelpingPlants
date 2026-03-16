@@ -1142,11 +1142,7 @@ input:checked + .slider:before {
     gap: 5px;
     color: #7f8c8d;
     font-size: 0.9rem;
-}
 
-/* Утилиты */
-.hidden {
-    display: none !important;
 // Firebase конфигурация - ВАШИ ДАННЫЕ
 const firebaseConfig = {
     apiKey: "AIzaSyDYTCaAyGSpUFu6-jKDn_wx_Xl7mP4lG68",
@@ -1163,119 +1159,80 @@ const auth = firebase.auth();
 
 // Состояние приложения
 let currentUser = null;
-let recognitionHistory = [];
 
-// ========== ПРОВЕРКА ТЕКУЩЕЙ СТРАНИЦЫ ==========
-const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+// ========== ПРОВЕРКА ЗАГРУЗКИ ДОМА ==========
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Страница загружена!');
+    
+    // Находим кнопки
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const historyNavBtn = document.getElementById('historyNavBtn');
+    const docsLink = document.getElementById('docsLink');
+    
+    console.log('Кнопка входа:', loginBtn); // Проверяем, нашлась ли кнопка
+    
+    // Обработчик кнопки ВОЙТИ
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function(e) {
+            console.log('Кнопка Войти нажата!');
+            window.location.href = 'login.html';
+        });
+    }
+    
+    // Обработчик кнопки ВЫЙТИ
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            console.log('Кнопка Выйти нажата!');
+            handleLogout();
+        });
+    }
+    
+    // Обработчик кнопки ИСТОРИЯ
+    if (historyNavBtn) {
+        historyNavBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Кнопка История нажата!');
+            if (currentUser) {
+                window.location.href = 'history.html';
+            } else {
+                showNotification('Войдите, чтобы увидеть историю', 'info');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            }
+        });
+    }
+    
+    // Обработчик ссылки ДОКУМЕНТАЦИЯ
+    if (docsLink) {
+        docsLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Замените на вашу ссылку на Google Диск
+            window.open('https://drive.google.com/drive/folders/ВАША_ССЫЛКА', '_blank');
+        });
+    }
+});
 
 // ========== АВТОРИЗАЦИЯ ==========
 
-// Регистрация
-async function handleRegister(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const username = document.getElementById('registerUsername').value;
-    
-    if (password.length < 6) {
-        showNotification('Пароль должен быть не менее 6 символов', 'error');
-        return;
-    }
-    
-    try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        
-        // Обновляем профиль пользователя
-        await userCredential.user.updateProfile({
-            displayName: username
-        });
-        
-        showNotification('Регистрация успешна!', 'success');
-        
-        // Перенаправляем на главную через 2 секунды
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Ошибка регистрации:', error);
-        
-        let message = 'Ошибка при регистрации';
-        switch(error.code) {
-            case 'auth/email-already-in-use':
-                message = 'Этот email уже зарегистрирован';
-                break;
-            case 'auth/invalid-email':
-                message = 'Некорректный email';
-                break;
-            case 'auth/weak-password':
-                message = 'Слишком простой пароль';
-                break;
-        }
-        
-        showNotification(message, 'error');
-    }
-}
-
-// Вход
-async function handleLogin(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-        showNotification('Вход выполнен успешно!', 'success');
-        
-        // Перенаправляем на главную через 2 секунды
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Ошибка входа:', error);
-        
-        let message = 'Ошибка при входе';
-        switch(error.code) {
-            case 'auth/user-not-found':
-                message = 'Пользователь не найден';
-                break;
-            case 'auth/wrong-password':
-                message = 'Неверный пароль';
-                break;
-            case 'auth/invalid-email':
-                message = 'Некорректный email';
-                break;
-            case 'auth/user-disabled':
-                message = 'Аккаунт заблокирован';
-                break;
-        }
-        
-        showNotification(message, 'error');
-    }
-}
-
-// Выход
-async function handleLogout() {
-    try {
-        await auth.signOut();
-        showNotification('Вы вышли из системы', 'info');
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Ошибка при выходе:', error);
-        showNotification('Ошибка при выходе', 'error');
-    }
-}
-
-// ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ==========
-
-// Обновление UI в зависимости от статуса авторизации
-function updateUIForUser(user) {
+// Слушатель состояния авторизации
+auth.onAuthStateChanged(function(user) {
+    console.log('Состояние авторизации изменилось:', user ? user.email : 'нет пользователя');
     currentUser = user;
+    updateUIForUser(user);
     
-    // Эти элементы есть только на главной странице
+    // Если мы на странице истории и пользователь залогинен, загружаем историю
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'history.html' && user) {
+        if (typeof displayUserHistory === 'function') {
+            displayUserHistory();
+        }
+    }
+});
+
+// Обновление интерфейса
+function updateUIForUser(user) {
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const userAvatar = document.getElementById('userAvatar');
@@ -1284,6 +1241,7 @@ function updateUIForUser(user) {
     
     if (user) {
         // Пользователь авторизован
+        console.log('Показываем интерфейс для авторизованного пользователя');
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
         if (userAvatar) userAvatar.style.display = 'flex';
@@ -1293,501 +1251,149 @@ function updateUIForUser(user) {
         const displayName = user.displayName || user.email.split('@')[0];
         if (userName) userName.textContent = displayName;
         
-        // Обновляем аватар
-        if (userAvatar) {
-            if (user.photoURL) {
-                userAvatar.innerHTML = `<img src="${user.photoURL}" alt="Avatar">`;
-            } else {
-                userAvatar.innerHTML = `<i class="fas fa-user"></i>`;
-            }
-        }
-        
-        // Загружаем данные пользователя
-        loadUserData();
-        
     } else {
         // Пользователь не авторизован
+        console.log('Показываем интерфейс для гостя');
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (userAvatar) userAvatar.style.display = 'none';
         if (userWelcome) userWelcome.style.display = 'none';
-        
-        // Если мы на странице профиля или истории, перенаправляем на вход
-        if (currentPage === 'profile.html' || currentPage === 'history.html') {
-            window.location.href = 'login.html';
-        }
     }
 }
 
-// ========== УВЕДОМЛЕНИЯ ==========
+// Функция выхода
+function handleLogout() {
+    auth.signOut()
+        .then(() => {
+            console.log('Выход выполнен');
+            showNotification('Вы вышли из системы', 'info');
+            window.location.href = 'index.html';
+        })
+        .catch((error) => {
+            console.error('Ошибка при выходе:', error);
+            showNotification('Ошибка при выходе', 'error');
+        });
+}
 
-// Показать уведомление
+// Функция показа уведомлений
 function showNotification(message, type = 'info') {
-    // Проверяем, есть ли контейнер для уведомлений, если нет - создаем
+    // Проверяем, есть ли контейнер для уведомлений
     let notificationContainer = document.querySelector('.notification-container');
     
     if (!notificationContainer) {
         notificationContainer = document.createElement('div');
         notificationContainer.className = 'notification-container';
+        notificationContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        `;
         document.body.appendChild(notificationContainer);
     }
     
     const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+    `;
+    
+    const icon = type === 'success' ? 'fa-check-circle' : 
+                 type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    
     notification.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : 
-                         type === 'error' ? 'fa-exclamation-circle' : 
-                         'fa-info-circle'}"></i>
+        <i class="fas ${icon}"></i>
         <span>${message}</span>
     `;
     
     notificationContainer.appendChild(notification);
     
+    // Анимация появления
     setTimeout(() => {
-        notification.classList.add('show');
+        notification.style.transform = 'translateX(0)';
     }, 10);
     
+    // Удаление через 3 секунды
     setTimeout(() => {
-        notification.classList.remove('show');
+        notification.style.transform = 'translateX(400px)';
         setTimeout(() => notification.remove(), 300);
     }, 3000);
 }
 
-// ========== ИСТОРИЯ ==========
-
-// Загрузка данных пользователя
-async function loadUserData() {
-    if (!currentUser) return;
-    
-    const saved = localStorage.getItem(`history_${currentUser.uid}`);
-    if (saved) {
-        recognitionHistory = JSON.parse(saved);
-    }
-}
-
-// Сохранить результат в историю (вызывается с главной страницы)
-function saveResultToHistory() {
-    if (!currentUser) {
-        showNotification('Войдите, чтобы сохранять историю', 'error');
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    const previewImage = document.getElementById('previewImage');
-    if (!previewImage || !previewImage.src) {
-        showNotification('Сначала проанализируйте растение', 'error');
-        return;
-    }
-    
-    const result = {
-        id: Date.now(),
-        plantName: document.getElementById('plantName').textContent,
-        confidence: document.getElementById('plantConfidence').textContent,
-        careText: document.getElementById('plantCareText').textContent,
-        image: previewImage.src,
-        date: new Date().toLocaleString()
-    };
-    
-    recognitionHistory.unshift(result);
-    
-    // Сохраняем в localStorage
-    localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
-    
-    showNotification('Результат сохранен в историю!', 'success');
-}
-
-// Загрузить историю (для страницы истории)
-function displayUserHistory() {
-    if (!currentUser) {
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    const historyList = document.getElementById('historyList');
-    if (!historyList) return;
-    
-    if (recognitionHistory.length === 0) {
-        historyList.innerHTML = `
-            <div class="empty-history">
-                <i class="fas fa-leaf"></i>
-                <p>У вас пока нет истории распознавания</p>
-                <button class="btn-primary" onclick="window.location.href='index.html'">
-                    Распознать растение
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    historyList.innerHTML = recognitionHistory.map(item => `
-        <div class="history-item">
-            <img src="${item.image}" alt="${item.plantName}">
-            <div class="history-item-info">
-                <h4>${item.plantName}</h4>
-                <p>${item.confidence}</p>
-                <small>${item.date}</small>
-            </div>
-            <button class="history-item-delete" onclick="deleteHistoryItem(${item.id})">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `).join('');
-}
-
-// Удалить элемент истории
-window.deleteHistoryItem = function(id) {
-    if (!currentUser) return;
-    
-    recognitionHistory = recognitionHistory.filter(item => item.id !== id);
-    localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
-    displayUserHistory();
-    showNotification('Запись удалена', 'info');
-};
-
-// ========== ИНИЦИАЛИЗАЦИЯ ==========
-
-// Слушатель состояния авторизации
-auth.onAuthStateChanged((user) => {
-    updateUIForUser(user);
-    
-    // Если мы на странице истории, загружаем историю
-    if (currentPage === 'history.html' && user) {
-        displayUserHistory();
-    }
-});
-
-// Обработчики событий в зависимости от страницы
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Обработчики для страницы ВХОДА (login.html)
-    if (currentPage === 'login.html') {
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', handleLogin);
-        }
-    }
-    
-    // Обработчики для страницы РЕГИСТРАЦИИ (register.html)
-    if (currentPage === 'register.html') {
-        const registerForm = document.getElementById('registerForm');
-        if (registerForm) {
-            registerForm.addEventListener('submit', handleRegister);
-        }
-    }
-    
-    // Обработчики для ГЛАВНОЙ страницы (index.html)
-    if (currentPage === 'index.html') {
-        // Кнопки навигации
-        const loginBtn = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const historyNavBtn = document.getElementById('historyNavBtn');
-        const saveResultBtn = document.getElementById('saveResultBtn');
-        
-        if (loginBtn) {
-            loginBtn.addEventListener('click', () => {
-                window.location.href = 'login.html';
-            });
-        }
-        
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', handleLogout);
-        }
-        
-        if (historyNavBtn) {
-            historyNavBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (currentUser) {
-                    window.location.href = 'history.html';
-                } else {
-                    showNotification('Войдите, чтобы увидеть историю', 'info');
-                    window.location.href = 'login.html';
-                }
-            });
-        }
-        
-        if (saveResultBtn) {
-            saveResultBtn.addEventListener('click', saveResultToHistory);
-        }
-        
-        // Инициализация функционала главной страницы
-        initializeMainPage();
-    }
-    
-    // Обработчики для страницы ИСТОРИИ (history.html)
-    if (currentPage === 'history.html') {
-        const backBtn = document.getElementById('backToMainBtn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                window.location.href = 'index.html';
-            });
-        }
-    }
-    
-    // Обновление года в подвале (на всех страницах)
-    const yearElement = document.getElementById('currentYear');
-    if (yearElement) {
-        yearElement.textContent = `© ${new Date().getFullYear()} HelpingPlantsAI`;
-    }
-});
-
-// Инициализация главной страницы
-function initializeMainPage() {
-    // Загрузка демо-рекомендаций
-    loadRecommendations();
-    
-    // Инициализация графика
-    initializeChart();
-    
-    // Обработчики для загрузки изображений
-    initializeImageUpload();
-    
-    // Обновление показаний сенсоров (демо)
-    setInterval(updateSensorData, 30000);
-    
-    // Кнопка обновления
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-            showNotification('Данные обновляются...', 'info');
-            setTimeout(() => {
-                updateSensorData();
-                showNotification('Данные обновлены', 'success');
-            }, 1000);
-        });
-    }
-    
-    // Переключатели
-    const autoWatering = document.getElementById('autoWatering');
-    if (autoWatering) {
-        autoWatering.addEventListener('change', (e) => {
-            showNotification(e.target.checked ? 'Автополив включен' : 'Автополив выключен', 'info');
-        });
-    }
-    
-    const notificationsToggle = document.getElementById('notifications');
-    if (notificationsToggle) {
-        notificationsToggle.addEventListener('change', (e) => {
-            showNotification(e.target.checked ? 'Уведомления включены' : 'Уведомления выключены', 'info');
-        });
-    }
-    
-    const aiMode = document.getElementById('aiMode');
-    if (aiMode) {
-        aiMode.addEventListener('change', (e) => {
-            showNotification(e.target.checked ? 'AI режим активирован' : 'AI режим деактивирован', 'info');
-        });
-    }
-    
-    // Документация
-    const docsLink = document.getElementById('docsLink');
-    if (docsLink) {
-        docsLink.addEventListener('click', (e) => {
+// Дополнительно: проверяем, есть ли кнопка входа на странице входа
+if (window.location.pathname.includes('login.html')) {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            showNotification('Документация в разработке', 'info');
-        });
-    }
-    
-    // Кнопка "Показать все рекомендации"
-    const viewAllBtn = document.getElementById('viewAllBtn');
-    if (viewAllBtn) {
-        viewAllBtn.addEventListener('click', () => {
-            if (!currentUser) {
-                showNotification('Войдите, чтобы увидеть все рекомендации', 'info');
-                window.location.href = 'login.html';
-            } else {
-                showNotification('Все рекомендации доступны в профиле', 'info');
-            }
-        });
-    }
-}
-
-// Загрузка рекомендаций
-function loadRecommendations() {
-    const recommendations = [
-        {
-            icon: 'fa-tint',
-            title: 'Полив',
-            description: 'Умеренный полив 2 раза в неделю',
-            priority: 'high'
-        },
-        {
-            icon: 'fa-sun',
-            title: 'Освещение',
-            description: 'Яркий рассеянный свет 8-10 часов',
-            priority: 'medium'
-        },
-        {
-            icon: 'fa-leaf',
-            title: 'Подкормка',
-            description: 'Удобрение для цветущих растений',
-            priority: 'low'
-        }
-    ];
-    
-    const list = document.getElementById('recommendationList');
-    if (list) {
-        list.innerHTML = recommendations.map(rec => `
-            <div class="recommendation-item priority-${rec.priority}">
-                <i class="fas ${rec.icon}"></i>
-                <div class="recommendation-content">
-                    <strong>${rec.title}</strong>
-                    <p>${rec.description}</p>
-                </div>
-            </div>
-        `).join('');
-    }
-}
-
-// Инициализация графика
-function initializeChart() {
-    const canvas = document.getElementById('sensorChart');
-    if (!canvas || typeof Chart === 'undefined') return;
-    
-    const ctx = canvas.getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-            datasets: [{
-                label: 'Влажность почвы %',
-                data: [45, 42, 38, 35, 40, 45, 47],
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showNotification('Вход выполнен успешно!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                let message = 'Ошибка при входе';
+                if (error.code === 'auth/user-not-found') {
+                    message = 'Пользователь не найден';
+                } else if (error.code === 'auth/wrong-password') {
+                    message = 'Неверный пароль';
+                } else if (error.code === 'auth/invalid-email') {
+                    message = 'Некорректный email';
                 }
+                showNotification(message, 'error');
             }
-        }
-    });
-}
-
-// Обновление данных сенсоров
-function updateSensorData() {
-    const randomHumidity = Math.floor(Math.random() * 30) + 35;
-    
-    const humidityValue = document.getElementById('humidityValue');
-    const currentHumidity = document.getElementById('currentHumidity');
-    const humidityDot = document.getElementById('humidityDot');
-    const humidityStatus = document.getElementById('humidityStatus');
-    
-    if (humidityValue) humidityValue.textContent = randomHumidity + '%';
-    if (currentHumidity) currentHumidity.textContent = randomHumidity + '%';
-    
-    if (humidityDot && humidityStatus) {
-        if (randomHumidity < 40) {
-            humidityDot.className = 'status-dot dry';
-            humidityStatus.textContent = 'Сухо';
-        } else if (randomHumidity > 60) {
-            humidityDot.className = 'status-dot wet';
-            humidityStatus.textContent = 'Влажно';
-        } else {
-            humidityDot.className = 'status-dot ideal';
-            humidityStatus.textContent = 'Идеально';
-        }
-    }
-}
-
-// Инициализация загрузки изображений
-function initializeImageUpload() {
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    const selectFileBtn = document.getElementById('selectFileBtn');
-    const imagePreview = document.getElementById('imagePreview');
-    const previewImage = document.getElementById('previewImage');
-    const removePreviewBtn = document.getElementById('removePreviewBtn');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const resultCard = document.getElementById('resultCard');
-    
-    if (!uploadArea || !fileInput) return;
-    
-    if (selectFileBtn) {
-        selectFileBtn.addEventListener('click', () => fileInput.click());
-    }
-    
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (previewImage) previewImage.src = e.target.result;
-                if (imagePreview) imagePreview.style.display = 'block';
-                if (uploadArea) uploadArea.style.display = 'none';
-                
-                if (uploadProgress) uploadProgress.style.display = 'block';
-                
-                // Симуляция анализа
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 10;
-                    const progressFill = document.getElementById('progressFill');
-                    const progressPercent = document.getElementById('progressPercent');
-                    const progressStatusText = document.getElementById('progressStatusText');
-                    
-                    if (progressFill) progressFill.style.width = progress + '%';
-                    if (progressPercent) progressPercent.textContent = progress + '%';
-                    
-                    if (progress === 30) {
-                        if (progressStatusText) progressStatusText.textContent = 'Анализ изображения...';
-                    } else if (progress === 60) {
-                        if (progressStatusText) progressStatusText.textContent = 'Поиск в базе данных...';
-                    } else if (progress === 90) {
-                        if (progressStatusText) progressStatusText.textContent = 'Формирование рекомендаций...';
-                    }
-                    
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        if (uploadProgress) uploadProgress.style.display = 'none';
-                        if (resultCard) resultCard.style.display = 'block';
-                        
-                        const plantNames = ['Монстера', 'Фикус', 'Спатифиллум', 'Орхидея', 'Кактус'];
-                        const randomPlant = plantNames[Math.floor(Math.random() * plantNames.length)];
-                        
-                        const plantNameEl = document.getElementById('plantName');
-                        if (plantNameEl) plantNameEl.textContent = randomPlant;
-                    }
-                }, 300);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    if (removePreviewBtn) {
-        removePreviewBtn.addEventListener('click', () => {
-            if (imagePreview) imagePreview.style.display = 'none';
-            if (uploadArea) uploadArea.style.display = 'block';
-            if (resultCard) resultCard.style.display = 'none';
-            if (uploadProgress) uploadProgress.style.display = 'none';
-            fileInput.value = '';
         });
     }
-    
-    // Drag and drop
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            fileInput.files = e.dataTransfer.files;
-            const event = new Event('change');
-            fileInput.dispatchEvent(event);
-        }
-    });
 }
+
+// Проверка страницы регистрации
+if (window.location.pathname.includes('register.html')) {
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const username = document.getElementById('registerUsername').value;
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({
+                    displayName: username
+                });
+                
+                showNotification('Регистрация успешна!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } catch (error) {
+                console.error('Ошибка регистрации:', error);
+                let message = 'Ошибка при регистрации';
+                if (error.code === 'auth/email-already-in-use') {
+                    message = 'Этот email уже зарегистрирован';
+                } else if (error.code === 'auth/weak-password') {
+                    message = 'Пароль слишком простой';
+                }
+                showNotification(message, 'error');
+            }
+        });
+    }
+}
+}
+
