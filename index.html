@@ -413,5 +413,82 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js"></script>
     <script src="script.js"></script>
+    
+    // Firebase настройки
+const firebaseConfig = {
+    apiKey: "AIzaSyDYTCaAyGSpUFu6-jKDn_wx_Xl7mP4lG68",
+    authDomain: "helpingplantsai.firebaseapp.com",
+    projectId: "helpingplantsai",
+    storageBucket: "helpingplantsai.firebasestorage.app",
+    messagingSenderId: "822289586033",
+    appId: "1:822289586033:web:d13cf75c8d9628b9d048d0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// Следим за состоянием входа
+auth.onAuthStateChanged(function(user) {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    
+    if (user) {
+        // Пользователь залогинен
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'block';
+        if (userAvatar) userAvatar.style.display = 'flex';
+        if (userName) {
+            userName.textContent = user.displayName || user.email;
+        }
+        
+        // Показываем приветствие
+        const welcome = document.getElementById('userWelcome');
+        if (welcome) welcome.style.display = 'block';
+        
+    } else {
+        // Пользователь не залогинен
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (userAvatar) userAvatar.style.display = 'none';
+        
+        const welcome = document.getElementById('userWelcome');
+        if (welcome) welcome.style.display = 'none';
+    }
+});
+
+// Выход
+function logout() {
+    auth.signOut().then(function() {
+        alert('Вы вышли');
+        window.location.href = 'index.html';
+    });
+}
+
+// Обработчики кнопок
+document.addEventListener('DOMContentLoaded', function() {
+    // Кнопка входа
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function() {
+            window.location.href = 'login.html';
+        });
+    }
+    
+    // Кнопка истории
+    const historyBtn = document.getElementById('historyNavBtn');
+    if (historyBtn) {
+        historyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (auth.currentUser) {
+                window.location.href = 'history.html';
+            } else {
+                alert('Сначала войдите');
+                window.location.href = 'login.html';
+            }
+        });
+    }
+});
 </body>
 </html>
