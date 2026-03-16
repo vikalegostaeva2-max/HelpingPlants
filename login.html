@@ -2,308 +2,156 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход - HelpingPlantsAI</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Дополнительные стили для страниц авторизации */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            padding: 20px;
         }
-        
-        .auth-wrapper {
-            width: 100%;
-            max-width: 450px;
-        }
-        
-        .auth-card {
+        .auth-container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            animation: slideUp 0.5s ease;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .auth-header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            width: 100%;
+            max-width: 400px;
             padding: 40px;
-            text-align: center;
-            color: white;
         }
-        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
         .auth-header i {
             font-size: 48px;
-            margin-bottom: 15px;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        
-        .auth-header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-        
-        .auth-header p {
-            margin: 10px 0 0;
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        
-        .auth-body {
-            padding: 40px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #374151;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .form-group label i {
-            margin-right: 8px;
             color: #10b981;
+            margin-bottom: 15px;
         }
-        
-        .input-wrapper {
-            position: relative;
+        .auth-header h1 {
+            color: #333;
+            font-size: 24px;
         }
-        
-        .input-wrapper input {
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group input {
             width: 100%;
-            padding: 12px 15px 12px 45px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 16px;
             transition: all 0.3s;
-            box-sizing: border-box;
         }
-        
-        .input-wrapper input:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
-        
-        .input-wrapper i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            transition: all 0.3s;
-        }
-        
-        .input-wrapper input:focus + i {
-            color: #10b981;
-        }
-        
         .auth-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #10b981;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
         }
-        
         .auth-btn:hover {
+            background: #059669;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
         }
-        
-        .auth-btn i {
-            font-size: 18px;
-        }
-        
         .auth-links {
-            margin-top: 25px;
-            text-align: center;
-        }
-        
-        .auth-links a {
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .auth-links a:hover {
-            color: #10b981;
-        }
-        
-        .auth-links .separator {
-            margin: 0 10px;
-            color: #e5e7eb;
-        }
-        
-        .back-link {
             text-align: center;
             margin-top: 20px;
         }
-        
+        .auth-links a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 15px;
+        }
         .back-link a {
-            color: white;
+            color: #666;
             text-decoration: none;
             font-size: 14px;
-            opacity: 0.9;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
         }
-        
-        .back-link a:hover {
-            opacity: 1;
-            transform: translateX(-5px);
-        }
-        
         .error-message {
             color: #ef4444;
-            font-size: 13px;
+            font-size: 14px;
             margin-top: 5px;
             display: none;
-        }
-        
-        .password-toggle {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #9ca3af;
-        }
-        
-        .password-toggle:hover {
-            color: #10b981;
         }
     </style>
 </head>
 <body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header">
-                <i class="fas fa-seedling"></i>
-                <h1>Добро пожаловать!</h1>
-                <p>Войдите в свой аккаунт HelpingPlantsAI</p>
-            </div>
-            
-            <div class="auth-body">
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Email</label>
-                        <div class="input-wrapper">
-                            <input type="email" id="loginEmail" placeholder="Введите ваш email" required>
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Пароль</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="loginPassword" placeholder="Введите пароль" required>
-                            <i class="fas fa-lock"></i>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('loginPassword')"></i>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="auth-btn">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Войти
-                    </button>
-                    
-                    <div class="auth-links">
-                        <a href="register.html"><i class="fas fa-user-plus"></i> Создать аккаунт</a>
-                        <span class="separator">|</span>
-                        <a href="#" id="forgotPassword"><i class="fas fa-key"></i> Забыли пароль?</a>
-                    </div>
-                </form>
-            </div>
+    <div class="auth-container">
+        <div class="auth-header">
+            <i class="fas fa-seedling"></i>
+            <h1>Вход в HelpingPlantsAI</h1>
         </div>
         
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="Пароль" required>
+            </div>
+            <button type="submit" class="auth-btn">Войти</button>
+        </form>
+        
+        <div class="auth-links">
+            Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+        </div>
         <div class="back-link">
-            <a href="index.html"><i class="fas fa-arrow-left"></i> Вернуться на главную</a>
+            <a href="index.html">← На главную</a>
         </div>
     </div>
 
-    <!-- Подключение Firebase -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="script.js"></script>
+    <script src="https://kit.fontawesome.com/your-code.js"></script>
     
     <script>
-        // Функция для показа/скрытия пароля
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = event.target;
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-        
-        // Обработка восстановления пароля
-        document.getElementById('forgotPassword').addEventListener('click', (e) => {
+        // Firebase настройки
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYTCaAyGSpUFu6-jKDn_wx_Xl7mP4lG68",
+            authDomain: "helpingplantsai.firebaseapp.com",
+            projectId: "helpingplantsai",
+            storageBucket: "helpingplantsai.firebasestorage.app",
+            messagingSenderId: "822289586033",
+            appId: "1:822289586033:web:d13cf75c8d9628b9d048d0"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Вход
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
             const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
             
-            if (!email) {
-                showNotification('Введите email для восстановления', 'error');
-                return;
-            }
-            
-            auth.sendPasswordResetEmail(email)
-                .then(() => {
-                    showNotification('Письмо для восстановления отправлено!', 'success');
+            auth.signInWithEmailAndPassword(email, password)
+                .then(function() {
+                    alert('Вход выполнен!');
+                    window.location.href = 'index.html';
                 })
-                .catch((error) => {
-                    showNotification('Ошибка: ' + error.message, 'error');
+                .catch(function(error) {
+                    alert('Ошибка: ' + error.message);
                 });
         });
     </script>
