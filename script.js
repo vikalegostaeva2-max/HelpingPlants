@@ -1147,7 +1147,6 @@ input:checked + .slider:before {
 /* Утилиты */
 .hidden {
     display: none !important;
-}
 // Firebase конфигурация - ВАШИ ДАННЫЕ
 const firebaseConfig = {
     apiKey: "AIzaSyDYTCaAyGSpUFu6-jKDn_wx_Xl7mP4lG68",
@@ -1164,67 +1163,10 @@ const auth = firebase.auth();
 
 // Состояние приложения
 let currentUser = null;
-let notifications = [];
 let recognitionHistory = [];
 
-// DOM элементы
-const elements = {
-    authModal: document.getElementById('authModal'),
-    historyModal: document.getElementById('historyModal'),
-    loginBtn: document.getElementById('loginBtn'),
-    logoutBtn: document.getElementById('logoutBtn'),
-    userAvatar: document.getElementById('userAvatar'),
-    userWelcome: document.getElementById('userWelcome'),
-    userName: document.getElementById('userName'),
-    notificationBadge: document.getElementById('notificationBadge'),
-    loginForm: document.getElementById('loginForm'),
-    registerForm: document.getElementById('registerForm'),
-    authTabs: document.querySelectorAll('.auth-tab'),
-    closeAuthModal: document.getElementById('closeAuthModal'),
-    closeHistoryModal: document.getElementById('closeHistoryModal'),
-    historyNavBtn: document.getElementById('historyNavBtn'),
-    saveResultBtn: document.getElementById('saveResultBtn')
-};
-
-// ========== УПРАВЛЕНИЕ МОДАЛЬНЫМИ ОКНАМИ ==========
-
-// Открыть модальное окно авторизации
-function openAuthModal(tab = 'login') {
-    elements.authModal.style.display = 'flex';
-    
-    // Переключение вкладки
-    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    
-    if (tab === 'login') {
-        document.getElementById('loginForm').classList.add('active');
-        document.querySelector('[data-tab="login"]').classList.add('active');
-    } else {
-        document.getElementById('registerForm').classList.add('active');
-        document.querySelector('[data-tab="register"]').classList.add('active');
-    }
-}
-
-// Закрыть модальное окно авторизации
-function closeAuthModal() {
-    elements.authModal.style.display = 'none';
-}
-
-// Открыть историю
-function openHistoryModal() {
-    if (!currentUser) {
-        showNotification('Необходимо войти в систему', 'error');
-        openAuthModal('login');
-        return;
-    }
-    elements.historyModal.style.display = 'flex';
-    loadUserHistory();
-}
-
-// Закрыть историю
-function closeHistoryModal() {
-    elements.historyModal.style.display = 'none';
-}
+// ========== ПРОВЕРКА ТЕКУЩЕЙ СТРАНИЦЫ ==========
+const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
 // ========== АВТОРИЗАЦИЯ ==========
 
@@ -1250,7 +1192,11 @@ async function handleRegister(e) {
         });
         
         showNotification('Регистрация успешна!', 'success');
-        closeAuthModal();
+        
+        // Перенаправляем на главную через 2 секунды
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
         
     } catch (error) {
         console.error('Ошибка регистрации:', error);
@@ -1282,7 +1228,11 @@ async function handleLogin(e) {
     try {
         await auth.signInWithEmailAndPassword(email, password);
         showNotification('Вход выполнен успешно!', 'success');
-        closeAuthModal();
+        
+        // Перенаправляем на главную через 2 секунды
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
         
     } catch (error) {
         console.error('Ошибка входа:', error);
@@ -1312,6 +1262,7 @@ async function handleLogout() {
     try {
         await auth.signOut();
         showNotification('Вы вышли из системы', 'info');
+        window.location.href = 'index.html';
     } catch (error) {
         console.error('Ошибка при выходе:', error);
         showNotification('Ошибка при выходе', 'error');
@@ -1324,22 +1275,31 @@ async function handleLogout() {
 function updateUIForUser(user) {
     currentUser = user;
     
+    // Эти элементы есть только на главной странице
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userAvatar = document.getElementById('userAvatar');
+    const userWelcome = document.getElementById('userWelcome');
+    const userName = document.getElementById('userName');
+    
     if (user) {
         // Пользователь авторизован
-        elements.loginBtn.style.display = 'none';
-        elements.logoutBtn.style.display = 'block';
-        elements.userAvatar.style.display = 'flex';
-        elements.userWelcome.style.display = 'block';
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'block';
+        if (userAvatar) userAvatar.style.display = 'flex';
+        if (userWelcome) userWelcome.style.display = 'block';
         
         // Обновляем имя пользователя
         const displayName = user.displayName || user.email.split('@')[0];
-        elements.userName.textContent = displayName;
+        if (userName) userName.textContent = displayName;
         
         // Обновляем аватар
-        if (user.photoURL) {
-            elements.userAvatar.innerHTML = `<img src="${user.photoURL}" alt="Avatar">`;
-        } else {
-            elements.userAvatar.innerHTML = `<i class="fas fa-user"></i>`;
+        if (userAvatar) {
+            if (user.photoURL) {
+                userAvatar.innerHTML = `<img src="${user.photoURL}" alt="Avatar">`;
+            } else {
+                userAvatar.innerHTML = `<i class="fas fa-user"></i>`;
+            }
         }
         
         // Загружаем данные пользователя
@@ -1347,39 +1307,15 @@ function updateUIForUser(user) {
         
     } else {
         // Пользователь не авторизован
-        elements.loginBtn.style.display = 'block';
-        elements.logoutBtn.style.display = 'none';
-        elements.userAvatar.style.display = 'none';
-        elements.userWelcome.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (userAvatar) userAvatar.style.display = 'none';
+        if (userWelcome) userWelcome.style.display = 'none';
         
-        // Скрываем контент, требующий авторизации
-        resetToGuestView();
-    }
-}
-
-// Сброс к гостевому виду
-function resetToGuestView() {
-    // Скрываем результаты распознавания
-    document.getElementById('resultCard').style.display = 'none';
-    document.getElementById('uploadProgress').style.display = 'none';
-    
-    // Очищаем превью если есть
-    const imagePreview = document.getElementById('imagePreview');
-    const uploadArea = document.getElementById('uploadArea');
-    if (imagePreview.style.display === 'block') {
-        imagePreview.style.display = 'none';
-        uploadArea.style.display = 'block';
-    }
-}
-
-// Загрузка данных пользователя
-async function loadUserData() {
-    // Здесь будет загрузка истории из базы данных
-    // Пока используем localStorage
-    const saved = localStorage.getItem(`history_${currentUser.uid}`);
-    if (saved) {
-        recognitionHistory = JSON.parse(saved);
-        updateNotificationBadge();
+        // Если мы на странице профиля или истории, перенаправляем на вход
+        if (currentPage === 'profile.html' || currentPage === 'history.html') {
+            window.location.href = 'login.html';
+        }
     }
 }
 
@@ -1387,6 +1323,15 @@ async function loadUserData() {
 
 // Показать уведомление
 function showNotification(message, type = 'info') {
+    // Проверяем, есть ли контейнер для уведомлений, если нет - создаем
+    let notificationContainer = document.querySelector('.notification-container');
+    
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.className = 'notification-container';
+        document.body.appendChild(notificationContainer);
+    }
+    
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
@@ -1396,7 +1341,7 @@ function showNotification(message, type = 'info') {
         <span>${message}</span>
     `;
     
-    document.body.appendChild(notification);
+    notificationContainer.appendChild(notification);
     
     setTimeout(() => {
         notification.classList.add('show');
@@ -1408,25 +1353,28 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Обновить бейдж уведомлений
-function updateNotificationBadge() {
-    const count = notifications.length;
-    elements.notificationBadge.textContent = count;
-    elements.notificationBadge.style.display = count > 0 ? 'block' : 'none';
-}
-
 // ========== ИСТОРИЯ ==========
 
-// Сохранить результат в историю
+// Загрузка данных пользователя
+async function loadUserData() {
+    if (!currentUser) return;
+    
+    const saved = localStorage.getItem(`history_${currentUser.uid}`);
+    if (saved) {
+        recognitionHistory = JSON.parse(saved);
+    }
+}
+
+// Сохранить результат в историю (вызывается с главной страницы)
 function saveResultToHistory() {
     if (!currentUser) {
         showNotification('Войдите, чтобы сохранять историю', 'error');
-        openAuthModal('login');
+        window.location.href = 'login.html';
         return;
     }
     
     const previewImage = document.getElementById('previewImage');
-    if (!previewImage.src) {
+    if (!previewImage || !previewImage.src) {
         showNotification('Сначала проанализируйте растение', 'error');
         return;
     }
@@ -1442,21 +1390,30 @@ function saveResultToHistory() {
     
     recognitionHistory.unshift(result);
     
-    // Сохраняем в localStorage (позже заменим на базу данных)
+    // Сохраняем в localStorage
     localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
     
     showNotification('Результат сохранен в историю!', 'success');
 }
 
-// Загрузить историю пользователя
-function loadUserHistory() {
+// Загрузить историю (для страницы истории)
+function displayUserHistory() {
+    if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+    
     const historyList = document.getElementById('historyList');
+    if (!historyList) return;
     
     if (recognitionHistory.length === 0) {
         historyList.innerHTML = `
             <div class="empty-history">
                 <i class="fas fa-leaf"></i>
                 <p>У вас пока нет истории распознавания</p>
+                <button class="btn-primary" onclick="window.location.href='index.html'">
+                    Распознать растение
+                </button>
             </div>
         `;
         return;
@@ -1479,9 +1436,11 @@ function loadUserHistory() {
 
 // Удалить элемент истории
 window.deleteHistoryItem = function(id) {
+    if (!currentUser) return;
+    
     recognitionHistory = recognitionHistory.filter(item => item.id !== id);
     localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
-    loadUserHistory();
+    displayUserHistory();
     showNotification('Запись удалена', 'info');
 };
 
@@ -1490,46 +1449,89 @@ window.deleteHistoryItem = function(id) {
 // Слушатель состояния авторизации
 auth.onAuthStateChanged((user) => {
     updateUIForUser(user);
+    
+    // Если мы на странице истории, загружаем историю
+    if (currentPage === 'history.html' && user) {
+        displayUserHistory();
+    }
 });
 
-// Обработчики событий
+// Обработчики событий в зависимости от страницы
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Кнопки авторизации
-    if (elements.loginBtn) elements.loginBtn.addEventListener('click', () => openAuthModal('login'));
-    if (elements.logoutBtn) elements.logoutBtn.addEventListener('click', handleLogout);
-    if (elements.userAvatar) elements.userAvatar.addEventListener('click', () => openAuthModal('login'));
+    // Обработчики для страницы ВХОДА (login.html)
+    if (currentPage === 'login.html') {
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
+        }
+    }
     
-    // Модальные окна
-    if (elements.closeAuthModal) elements.closeAuthModal.addEventListener('click', closeAuthModal);
-    if (elements.closeHistoryModal) elements.closeHistoryModal.addEventListener('click', closeHistoryModal);
-    if (elements.historyNavBtn) elements.historyNavBtn.addEventListener('click', openHistoryModal);
-    if (elements.saveResultBtn) elements.saveResultBtn.addEventListener('click', saveResultToHistory);
+    // Обработчики для страницы РЕГИСТРАЦИИ (register.html)
+    if (currentPage === 'register.html') {
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', handleRegister);
+        }
+    }
     
-    // Переключение вкладок
-    elements.authTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const tabName = tab.dataset.tab;
-            openAuthModal(tabName);
-        });
-    });
+    // Обработчики для ГЛАВНОЙ страницы (index.html)
+    if (currentPage === 'index.html') {
+        // Кнопки навигации
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const historyNavBtn = document.getElementById('historyNavBtn');
+        const saveResultBtn = document.getElementById('saveResultBtn');
+        
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                window.location.href = 'login.html';
+            });
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+        
+        if (historyNavBtn) {
+            historyNavBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentUser) {
+                    window.location.href = 'history.html';
+                } else {
+                    showNotification('Войдите, чтобы увидеть историю', 'info');
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+        
+        if (saveResultBtn) {
+            saveResultBtn.addEventListener('click', saveResultToHistory);
+        }
+        
+        // Инициализация функционала главной страницы
+        initializeMainPage();
+    }
     
-    // Формы
-    if (elements.loginForm) elements.loginForm.addEventListener('submit', handleLogin);
-    if (elements.registerForm) elements.registerForm.addEventListener('submit', handleRegister);
+    // Обработчики для страницы ИСТОРИИ (history.html)
+    if (currentPage === 'history.html') {
+        const backBtn = document.getElementById('backToMainBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                window.location.href = 'index.html';
+            });
+        }
+    }
     
-    // Закрытие по клику вне модального окна
-    window.addEventListener('click', (e) => {
-        if (e.target === elements.authModal) closeAuthModal();
-        if (e.target === elements.historyModal) closeHistoryModal();
-    });
-    
-    // Инициализация остального функционала
-    initializeApp();
+    // Обновление года в подвале (на всех страницах)
+    const yearElement = document.getElementById('currentYear');
+    if (yearElement) {
+        yearElement.textContent = `© ${new Date().getFullYear()} HelpingPlantsAI`;
+    }
 });
 
-// Инициализация приложения
-function initializeApp() {
+// Инициализация главной страницы
+function initializeMainPage() {
     // Загрузка демо-рекомендаций
     loadRecommendations();
     
@@ -1539,14 +1541,64 @@ function initializeApp() {
     // Обработчики для загрузки изображений
     initializeImageUpload();
     
-    // Обновление года в подвале
-    const yearElement = document.getElementById('currentYear');
-    if (yearElement) {
-        yearElement.textContent = `© ${new Date().getFullYear()} HelpingPlantsAI`;
+    // Обновление показаний сенсоров (демо)
+    setInterval(updateSensorData, 30000);
+    
+    // Кнопка обновления
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            showNotification('Данные обновляются...', 'info');
+            setTimeout(() => {
+                updateSensorData();
+                showNotification('Данные обновлены', 'success');
+            }, 1000);
+        });
     }
     
-    // Обновление показаний сенсоров (демо)
-    setInterval(updateSensorData, 30000); // Обновление каждые 30 секунд
+    // Переключатели
+    const autoWatering = document.getElementById('autoWatering');
+    if (autoWatering) {
+        autoWatering.addEventListener('change', (e) => {
+            showNotification(e.target.checked ? 'Автополив включен' : 'Автополив выключен', 'info');
+        });
+    }
+    
+    const notificationsToggle = document.getElementById('notifications');
+    if (notificationsToggle) {
+        notificationsToggle.addEventListener('change', (e) => {
+            showNotification(e.target.checked ? 'Уведомления включены' : 'Уведомления выключены', 'info');
+        });
+    }
+    
+    const aiMode = document.getElementById('aiMode');
+    if (aiMode) {
+        aiMode.addEventListener('change', (e) => {
+            showNotification(e.target.checked ? 'AI режим активирован' : 'AI режим деактивирован', 'info');
+        });
+    }
+    
+    // Документация
+    const docsLink = document.getElementById('docsLink');
+    if (docsLink) {
+        docsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showNotification('Документация в разработке', 'info');
+        });
+    }
+    
+    // Кнопка "Показать все рекомендации"
+    const viewAllBtn = document.getElementById('viewAllBtn');
+    if (viewAllBtn) {
+        viewAllBtn.addEventListener('click', () => {
+            if (!currentUser) {
+                showNotification('Войдите, чтобы увидеть все рекомендации', 'info');
+                window.location.href = 'login.html';
+            } else {
+                showNotification('Все рекомендации доступны в профиле', 'info');
+            }
+        });
+    }
 }
 
 // Загрузка рекомендаций
@@ -1589,7 +1641,7 @@ function loadRecommendations() {
 // Инициализация графика
 function initializeChart() {
     const canvas = document.getElementById('sensorChart');
-    if (!canvas) return;
+    if (!canvas || typeof Chart === 'undefined') return;
     
     const ctx = canvas.getContext('2d');
     new Chart(ctx, {
@@ -1617,9 +1669,9 @@ function initializeChart() {
     });
 }
 
-// Обновление данных сенсоров (демо)
+// Обновление данных сенсоров
 function updateSensorData() {
-    const randomHumidity = Math.floor(Math.random() * 30) + 35; // 35-65%
+    const randomHumidity = Math.floor(Math.random() * 30) + 35;
     
     const humidityValue = document.getElementById('humidityValue');
     const currentHumidity = document.getElementById('currentHumidity');
@@ -1669,7 +1721,6 @@ function initializeImageUpload() {
                 if (imagePreview) imagePreview.style.display = 'block';
                 if (uploadArea) uploadArea.style.display = 'none';
                 
-                // Показываем прогресс загрузки
                 if (uploadProgress) uploadProgress.style.display = 'block';
                 
                 // Симуляция анализа
@@ -1696,7 +1747,6 @@ function initializeImageUpload() {
                         if (uploadProgress) uploadProgress.style.display = 'none';
                         if (resultCard) resultCard.style.display = 'block';
                         
-                        // Обновляем демо-данные
                         const plantNames = ['Монстера', 'Фикус', 'Спатифиллум', 'Орхидея', 'Кактус'];
                         const randomPlant = plantNames[Math.floor(Math.random() * plantNames.length)];
                         
@@ -1738,60 +1788,6 @@ function initializeImageUpload() {
             fileInput.files = e.dataTransfer.files;
             const event = new Event('change');
             fileInput.dispatchEvent(event);
-        }
-    });
-}
-
-// Кнопка обновления
-const refreshBtn = document.getElementById('refreshBtn');
-if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-        showNotification('Данные обновляются...', 'info');
-        setTimeout(() => {
-            updateSensorData();
-            showNotification('Данные обновлены', 'success');
-        }, 1000);
-    });
-}
-
-// Переключатели
-const autoWatering = document.getElementById('autoWatering');
-if (autoWatering) {
-    autoWatering.addEventListener('change', (e) => {
-        showNotification(e.target.checked ? 'Автополив включен' : 'Автополив выключен', 'info');
-    });
-}
-
-const notificationsToggle = document.getElementById('notifications');
-if (notificationsToggle) {
-    notificationsToggle.addEventListener('change', (e) => {
-        showNotification(e.target.checked ? 'Уведомления включены' : 'Уведомления выключены', 'info');
-    });
-}
-
-const aiMode = document.getElementById('aiMode');
-if (aiMode) {
-    aiMode.addEventListener('change', (e) => {
-        showNotification(e.target.checked ? 'AI режим активирован' : 'AI режим деактивирован', 'info');
-    });
-}
-
-// Документация
-const docsLink = document.getElementById('docsLink');
-if (docsLink) {
-    docsLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        showNotification('Документация в разработке', 'info');
-    });
-}
-
-// Кнопка "Показать все рекомендации"
-const viewAllBtn = document.getElementById('viewAllBtn');
-if (viewAllBtn) {
-    viewAllBtn.addEventListener('click', () => {
-        showNotification('Все рекомендации доступны после входа', 'info');
-        if (!currentUser) {
-            openAuthModal('login');
         }
     });
 }
