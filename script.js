@@ -1148,3 +1148,650 @@ input:checked + .slider:before {
 .hidden {
     display: none !important;
 }
+// Firebase конфигурация - ВАШИ ДАННЫЕ
+const firebaseConfig = {
+    apiKey: "AIzaSyDYTCaAyGSpUFu6-jKDn_wx_Xl7mP4lG68",
+    authDomain: "helpingplantsai.firebaseapp.com",
+    projectId: "helpingplantsai",
+    storageBucket: "helpingplantsai.firebasestorage.app",
+    messagingSenderId: "822289586033",
+    appId: "1:822289586033:web:d13cf75c8d9628b9d048d0"
+};
+
+// Инициализация Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// Состояние приложения
+let currentUser = null;
+let notifications = [];
+let recognitionHistory = [];
+
+// DOM элементы
+const elements = {
+    authModal: document.getElementById('authModal'),
+    historyModal: document.getElementById('historyModal'),
+    loginBtn: document.getElementById('loginBtn'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    userAvatar: document.getElementById('userAvatar'),
+    userWelcome: document.getElementById('userWelcome'),
+    userName: document.getElementById('userName'),
+    notificationBadge: document.getElementById('notificationBadge'),
+    loginForm: document.getElementById('loginForm'),
+    registerForm: document.getElementById('registerForm'),
+    authTabs: document.querySelectorAll('.auth-tab'),
+    closeAuthModal: document.getElementById('closeAuthModal'),
+    closeHistoryModal: document.getElementById('closeHistoryModal'),
+    historyNavBtn: document.getElementById('historyNavBtn'),
+    saveResultBtn: document.getElementById('saveResultBtn')
+};
+
+// ========== УПРАВЛЕНИЕ МОДАЛЬНЫМИ ОКНАМИ ==========
+
+// Открыть модальное окно авторизации
+function openAuthModal(tab = 'login') {
+    elements.authModal.style.display = 'flex';
+    
+    // Переключение вкладки
+    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    
+    if (tab === 'login') {
+        document.getElementById('loginForm').classList.add('active');
+        document.querySelector('[data-tab="login"]').classList.add('active');
+    } else {
+        document.getElementById('registerForm').classList.add('active');
+        document.querySelector('[data-tab="register"]').classList.add('active');
+    }
+}
+
+// Закрыть модальное окно авторизации
+function closeAuthModal() {
+    elements.authModal.style.display = 'none';
+}
+
+// Открыть историю
+function openHistoryModal() {
+    if (!currentUser) {
+        showNotification('Необходимо войти в систему', 'error');
+        openAuthModal('login');
+        return;
+    }
+    elements.historyModal.style.display = 'flex';
+    loadUserHistory();
+}
+
+// Закрыть историю
+function closeHistoryModal() {
+    elements.historyModal.style.display = 'none';
+}
+
+// ========== АВТОРИЗАЦИЯ ==========
+
+// Регистрация
+async function handleRegister(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const username = document.getElementById('registerUsername').value;
+    
+    if (password.length < 6) {
+        showNotification('Пароль должен быть не менее 6 символов', 'error');
+        return;
+    }
+    
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        
+        // Обновляем профиль пользователя
+        await userCredential.user.updateProfile({
+            displayName: username
+        });
+        
+        showNotification('Регистрация успешна!', 'success');
+        closeAuthModal();
+        
+    } catch (error) {
+        console.error('Ошибка регистрации:', error);
+        
+        let message = 'Ошибка при регистрации';
+        switch(error.code) {
+            case 'auth/email-already-in-use':
+                message = 'Этот email уже зарегистрирован';
+                break;
+            case 'auth/invalid-email':
+                message = 'Некорректный email';
+                break;
+            case 'auth/weak-password':
+                message = 'Слишком простой пароль';
+                break;
+        }
+        
+        showNotification(message, 'error');
+    }
+}
+
+// Вход
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        showNotification('Вход выполнен успешно!', 'success');
+        closeAuthModal();
+        
+    } catch (error) {
+        console.error('Ошибка входа:', error);
+        
+        let message = 'Ошибка при входе';
+        switch(error.code) {
+            case 'auth/user-not-found':
+                message = 'Пользователь не найден';
+                break;
+            case 'auth/wrong-password':
+                message = 'Неверный пароль';
+                break;
+            case 'auth/invalid-email':
+                message = 'Некорректный email';
+                break;
+            case 'auth/user-disabled':
+                message = 'Аккаунт заблокирован';
+                break;
+        }
+        
+        showNotification(message, 'error');
+    }
+}
+
+// Выход
+async function handleLogout() {
+    try {
+        await auth.signOut();
+        showNotification('Вы вышли из системы', 'info');
+    } catch (error) {
+        console.error('Ошибка при выходе:', error);
+        showNotification('Ошибка при выходе', 'error');
+    }
+}
+
+// ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ==========
+
+// Обновление UI в зависимости от статуса авторизации
+function updateUIForUser(user) {
+    currentUser = user;
+    
+    if (user) {
+        // Пользователь авторизован
+        elements.loginBtn.style.display = 'none';
+        elements.logoutBtn.style.display = 'block';
+        elements.userAvatar.style.display = 'flex';
+        elements.userWelcome.style.display = 'block';
+        
+        // Обновляем имя пользователя
+        const displayName = user.displayName || user.email.split('@')[0];
+        elements.userName.textContent = displayName;
+        
+        // Обновляем аватар
+        if (user.photoURL) {
+            elements.userAvatar.innerHTML = `<img src="${user.photoURL}" alt="Avatar">`;
+        } else {
+            elements.userAvatar.innerHTML = `<i class="fas fa-user"></i>`;
+        }
+        
+        // Загружаем данные пользователя
+        loadUserData();
+        
+    } else {
+        // Пользователь не авторизован
+        elements.loginBtn.style.display = 'block';
+        elements.logoutBtn.style.display = 'none';
+        elements.userAvatar.style.display = 'none';
+        elements.userWelcome.style.display = 'none';
+        
+        // Скрываем контент, требующий авторизации
+        resetToGuestView();
+    }
+}
+
+// Сброс к гостевому виду
+function resetToGuestView() {
+    // Скрываем результаты распознавания
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('uploadProgress').style.display = 'none';
+    
+    // Очищаем превью если есть
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadArea = document.getElementById('uploadArea');
+    if (imagePreview.style.display === 'block') {
+        imagePreview.style.display = 'none';
+        uploadArea.style.display = 'block';
+    }
+}
+
+// Загрузка данных пользователя
+async function loadUserData() {
+    // Здесь будет загрузка истории из базы данных
+    // Пока используем localStorage
+    const saved = localStorage.getItem(`history_${currentUser.uid}`);
+    if (saved) {
+        recognitionHistory = JSON.parse(saved);
+        updateNotificationBadge();
+    }
+}
+
+// ========== УВЕДОМЛЕНИЯ ==========
+
+// Показать уведомление
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                         type === 'error' ? 'fa-exclamation-circle' : 
+                         'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Обновить бейдж уведомлений
+function updateNotificationBadge() {
+    const count = notifications.length;
+    elements.notificationBadge.textContent = count;
+    elements.notificationBadge.style.display = count > 0 ? 'block' : 'none';
+}
+
+// ========== ИСТОРИЯ ==========
+
+// Сохранить результат в историю
+function saveResultToHistory() {
+    if (!currentUser) {
+        showNotification('Войдите, чтобы сохранять историю', 'error');
+        openAuthModal('login');
+        return;
+    }
+    
+    const previewImage = document.getElementById('previewImage');
+    if (!previewImage.src) {
+        showNotification('Сначала проанализируйте растение', 'error');
+        return;
+    }
+    
+    const result = {
+        id: Date.now(),
+        plantName: document.getElementById('plantName').textContent,
+        confidence: document.getElementById('plantConfidence').textContent,
+        careText: document.getElementById('plantCareText').textContent,
+        image: previewImage.src,
+        date: new Date().toLocaleString()
+    };
+    
+    recognitionHistory.unshift(result);
+    
+    // Сохраняем в localStorage (позже заменим на базу данных)
+    localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
+    
+    showNotification('Результат сохранен в историю!', 'success');
+}
+
+// Загрузить историю пользователя
+function loadUserHistory() {
+    const historyList = document.getElementById('historyList');
+    
+    if (recognitionHistory.length === 0) {
+        historyList.innerHTML = `
+            <div class="empty-history">
+                <i class="fas fa-leaf"></i>
+                <p>У вас пока нет истории распознавания</p>
+            </div>
+        `;
+        return;
+    }
+    
+    historyList.innerHTML = recognitionHistory.map(item => `
+        <div class="history-item">
+            <img src="${item.image}" alt="${item.plantName}">
+            <div class="history-item-info">
+                <h4>${item.plantName}</h4>
+                <p>${item.confidence}</p>
+                <small>${item.date}</small>
+            </div>
+            <button class="history-item-delete" onclick="deleteHistoryItem(${item.id})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+// Удалить элемент истории
+window.deleteHistoryItem = function(id) {
+    recognitionHistory = recognitionHistory.filter(item => item.id !== id);
+    localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
+    loadUserHistory();
+    showNotification('Запись удалена', 'info');
+};
+
+// ========== ИНИЦИАЛИЗАЦИЯ ==========
+
+// Слушатель состояния авторизации
+auth.onAuthStateChanged((user) => {
+    updateUIForUser(user);
+});
+
+// Обработчики событий
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Кнопки авторизации
+    if (elements.loginBtn) elements.loginBtn.addEventListener('click', () => openAuthModal('login'));
+    if (elements.logoutBtn) elements.logoutBtn.addEventListener('click', handleLogout);
+    if (elements.userAvatar) elements.userAvatar.addEventListener('click', () => openAuthModal('login'));
+    
+    // Модальные окна
+    if (elements.closeAuthModal) elements.closeAuthModal.addEventListener('click', closeAuthModal);
+    if (elements.closeHistoryModal) elements.closeHistoryModal.addEventListener('click', closeHistoryModal);
+    if (elements.historyNavBtn) elements.historyNavBtn.addEventListener('click', openHistoryModal);
+    if (elements.saveResultBtn) elements.saveResultBtn.addEventListener('click', saveResultToHistory);
+    
+    // Переключение вкладок
+    elements.authTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            openAuthModal(tabName);
+        });
+    });
+    
+    // Формы
+    if (elements.loginForm) elements.loginForm.addEventListener('submit', handleLogin);
+    if (elements.registerForm) elements.registerForm.addEventListener('submit', handleRegister);
+    
+    // Закрытие по клику вне модального окна
+    window.addEventListener('click', (e) => {
+        if (e.target === elements.authModal) closeAuthModal();
+        if (e.target === elements.historyModal) closeHistoryModal();
+    });
+    
+    // Инициализация остального функционала
+    initializeApp();
+});
+
+// Инициализация приложения
+function initializeApp() {
+    // Загрузка демо-рекомендаций
+    loadRecommendations();
+    
+    // Инициализация графика
+    initializeChart();
+    
+    // Обработчики для загрузки изображений
+    initializeImageUpload();
+    
+    // Обновление года в подвале
+    const yearElement = document.getElementById('currentYear');
+    if (yearElement) {
+        yearElement.textContent = `© ${new Date().getFullYear()} HelpingPlantsAI`;
+    }
+    
+    // Обновление показаний сенсоров (демо)
+    setInterval(updateSensorData, 30000); // Обновление каждые 30 секунд
+}
+
+// Загрузка рекомендаций
+function loadRecommendations() {
+    const recommendations = [
+        {
+            icon: 'fa-tint',
+            title: 'Полив',
+            description: 'Умеренный полив 2 раза в неделю',
+            priority: 'high'
+        },
+        {
+            icon: 'fa-sun',
+            title: 'Освещение',
+            description: 'Яркий рассеянный свет 8-10 часов',
+            priority: 'medium'
+        },
+        {
+            icon: 'fa-leaf',
+            title: 'Подкормка',
+            description: 'Удобрение для цветущих растений',
+            priority: 'low'
+        }
+    ];
+    
+    const list = document.getElementById('recommendationList');
+    if (list) {
+        list.innerHTML = recommendations.map(rec => `
+            <div class="recommendation-item priority-${rec.priority}">
+                <i class="fas ${rec.icon}"></i>
+                <div class="recommendation-content">
+                    <strong>${rec.title}</strong>
+                    <p>${rec.description}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+// Инициализация графика
+function initializeChart() {
+    const canvas = document.getElementById('sensorChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+            datasets: [{
+                label: 'Влажность почвы %',
+                data: [45, 42, 38, 35, 40, 45, 47],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// Обновление данных сенсоров (демо)
+function updateSensorData() {
+    const randomHumidity = Math.floor(Math.random() * 30) + 35; // 35-65%
+    
+    const humidityValue = document.getElementById('humidityValue');
+    const currentHumidity = document.getElementById('currentHumidity');
+    const humidityDot = document.getElementById('humidityDot');
+    const humidityStatus = document.getElementById('humidityStatus');
+    
+    if (humidityValue) humidityValue.textContent = randomHumidity + '%';
+    if (currentHumidity) currentHumidity.textContent = randomHumidity + '%';
+    
+    if (humidityDot && humidityStatus) {
+        if (randomHumidity < 40) {
+            humidityDot.className = 'status-dot dry';
+            humidityStatus.textContent = 'Сухо';
+        } else if (randomHumidity > 60) {
+            humidityDot.className = 'status-dot wet';
+            humidityStatus.textContent = 'Влажно';
+        } else {
+            humidityDot.className = 'status-dot ideal';
+            humidityStatus.textContent = 'Идеально';
+        }
+    }
+}
+
+// Инициализация загрузки изображений
+function initializeImageUpload() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImage = document.getElementById('previewImage');
+    const removePreviewBtn = document.getElementById('removePreviewBtn');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const resultCard = document.getElementById('resultCard');
+    
+    if (!uploadArea || !fileInput) return;
+    
+    if (selectFileBtn) {
+        selectFileBtn.addEventListener('click', () => fileInput.click());
+    }
+    
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (previewImage) previewImage.src = e.target.result;
+                if (imagePreview) imagePreview.style.display = 'block';
+                if (uploadArea) uploadArea.style.display = 'none';
+                
+                // Показываем прогресс загрузки
+                if (uploadProgress) uploadProgress.style.display = 'block';
+                
+                // Симуляция анализа
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    const progressFill = document.getElementById('progressFill');
+                    const progressPercent = document.getElementById('progressPercent');
+                    const progressStatusText = document.getElementById('progressStatusText');
+                    
+                    if (progressFill) progressFill.style.width = progress + '%';
+                    if (progressPercent) progressPercent.textContent = progress + '%';
+                    
+                    if (progress === 30) {
+                        if (progressStatusText) progressStatusText.textContent = 'Анализ изображения...';
+                    } else if (progress === 60) {
+                        if (progressStatusText) progressStatusText.textContent = 'Поиск в базе данных...';
+                    } else if (progress === 90) {
+                        if (progressStatusText) progressStatusText.textContent = 'Формирование рекомендаций...';
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        if (uploadProgress) uploadProgress.style.display = 'none';
+                        if (resultCard) resultCard.style.display = 'block';
+                        
+                        // Обновляем демо-данные
+                        const plantNames = ['Монстера', 'Фикус', 'Спатифиллум', 'Орхидея', 'Кактус'];
+                        const randomPlant = plantNames[Math.floor(Math.random() * plantNames.length)];
+                        
+                        const plantNameEl = document.getElementById('plantName');
+                        if (plantNameEl) plantNameEl.textContent = randomPlant;
+                    }
+                }, 300);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    if (removePreviewBtn) {
+        removePreviewBtn.addEventListener('click', () => {
+            if (imagePreview) imagePreview.style.display = 'none';
+            if (uploadArea) uploadArea.style.display = 'block';
+            if (resultCard) resultCard.style.display = 'none';
+            if (uploadProgress) uploadProgress.style.display = 'none';
+            fileInput.value = '';
+        });
+    }
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            fileInput.files = e.dataTransfer.files;
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }
+    });
+}
+
+// Кнопка обновления
+const refreshBtn = document.getElementById('refreshBtn');
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+        showNotification('Данные обновляются...', 'info');
+        setTimeout(() => {
+            updateSensorData();
+            showNotification('Данные обновлены', 'success');
+        }, 1000);
+    });
+}
+
+// Переключатели
+const autoWatering = document.getElementById('autoWatering');
+if (autoWatering) {
+    autoWatering.addEventListener('change', (e) => {
+        showNotification(e.target.checked ? 'Автополив включен' : 'Автополив выключен', 'info');
+    });
+}
+
+const notificationsToggle = document.getElementById('notifications');
+if (notificationsToggle) {
+    notificationsToggle.addEventListener('change', (e) => {
+        showNotification(e.target.checked ? 'Уведомления включены' : 'Уведомления выключены', 'info');
+    });
+}
+
+const aiMode = document.getElementById('aiMode');
+if (aiMode) {
+    aiMode.addEventListener('change', (e) => {
+        showNotification(e.target.checked ? 'AI режим активирован' : 'AI режим деактивирован', 'info');
+    });
+}
+
+// Документация
+const docsLink = document.getElementById('docsLink');
+if (docsLink) {
+    docsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showNotification('Документация в разработке', 'info');
+    });
+}
+
+// Кнопка "Показать все рекомендации"
+const viewAllBtn = document.getElementById('viewAllBtn');
+if (viewAllBtn) {
+    viewAllBtn.addEventListener('click', () => {
+        showNotification('Все рекомендации доступны после входа', 'info');
+        if (!currentUser) {
+            openAuthModal('login');
+        }
+    });
+}
