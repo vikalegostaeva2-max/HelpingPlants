@@ -2,369 +2,160 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация - HelpingPlantsAI</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            padding: 20px;
         }
-        
-        .auth-wrapper {
-            width: 100%;
-            max-width: 450px;
-        }
-        
-        .auth-card {
+        .auth-container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            animation: slideUp 0.5s ease;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .auth-header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            padding: 30px 40px;
-            text-align: center;
-            color: white;
-        }
-        
-        .auth-header i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        
-        .auth-header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-        
-        .auth-header p {
-            margin: 10px 0 0;
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        
-        .auth-body {
+            width: 100%;
+            max-width: 400px;
             padding: 40px;
         }
-        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-header i {
+            font-size: 48px;
+            color: #10b981;
+            margin-bottom: 15px;
+        }
+        .auth-header h1 {
+            color: #333;
+            font-size: 24px;
+        }
         .form-group {
             margin-bottom: 20px;
         }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #374151;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .form-group label i {
-            margin-right: 8px;
-            color: #10b981;
-        }
-        
-        .input-wrapper {
-            position: relative;
-        }
-        
-        .input-wrapper input {
+        .form-group input {
             width: 100%;
-            padding: 12px 15px 12px 45px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 16px;
             transition: all 0.3s;
-            box-sizing: border-box;
         }
-        
-        .input-wrapper input:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
-        
-        .input-wrapper i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            transition: all 0.3s;
-        }
-        
-        .input-wrapper input:focus + i {
-            color: #10b981;
-        }
-        
-        .password-strength {
-            margin-top: 8px;
-            height: 4px;
-            background: #e5e7eb;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .strength-bar {
-            height: 100%;
-            width: 0;
-            transition: all 0.3s;
-        }
-        
-        .strength-text {
-            font-size: 12px;
-            margin-top: 5px;
-            color: #6b7280;
-        }
-        
         .auth-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #10b981;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 30px;
         }
-        
         .auth-btn:hover {
+            background: #059669;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
         }
-        
-        .auth-btn i {
-            font-size: 18px;
-        }
-        
         .auth-links {
-            margin-top: 25px;
-            text-align: center;
-        }
-        
-        .auth-links a {
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .auth-links a:hover {
-            color: #10b981;
-        }
-        
-        .back-link {
             text-align: center;
             margin-top: 20px;
         }
-        
+        .auth-links a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 15px;
+        }
         .back-link a {
-            color: white;
+            color: #666;
             text-decoration: none;
             font-size: 14px;
-            opacity: 0.9;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .back-link a:hover {
-            opacity: 1;
-            transform: translateX(-5px);
-        }
-        
-        .password-requirements {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 5px;
-            padding-left: 20px;
-        }
-        
-        .password-requirements li {
-            margin-bottom: 3px;
-        }
-        
-        .password-requirements i {
-            margin-right: 5px;
-            font-size: 10px;
-        }
-        
-        .requirement-met {
-            color: #10b981;
         }
     </style>
 </head>
 <body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header">
-                <i class="fas fa-seedling"></i>
-                <h1>Присоединяйтесь!</h1>
-                <p>Создайте аккаунт HelpingPlantsAI</p>
-            </div>
-            
-            <div class="auth-body">
-                <form id="registerForm">
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Имя пользователя</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="registerUsername" placeholder="Как к вам обращаться?" required>
-                            <i class="fas fa-user"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Email</label>
-                        <div class="input-wrapper">
-                            <input type="email" id="registerEmail" placeholder="Ваш email" required>
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Пароль</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="registerPassword" placeholder="Придумайте пароль" minlength="6" required>
-                            <i class="fas fa-lock"></i>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('registerPassword')"></i>
-                        </div>
-                        <div class="password-strength">
-                            <div class="strength-bar" id="strengthBar"></div>
-                        </div>
-                        <div class="strength-text" id="strengthText">Введите пароль</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Подтверждение пароля</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="confirmPassword" placeholder="Повторите пароль" required>
-                            <i class="fas fa-lock"></i>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
-                        </div>
-                        <div id="passwordMatch" style="font-size: 12px; margin-top: 5px; color: #ef4444; display: none;">
-                            Пароли не совпадают
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="auth-btn">
-                        <i class="fas fa-user-plus"></i>
-                        Зарегистрироваться
-                    </button>
-                    
-                    <div class="auth-links">
-                        <a href="login.html"><i class="fas fa-sign-in-alt"></i> Уже есть аккаунт? Войти</a>
-                    </div>
-                </form>
-            </div>
+    <div class="auth-container">
+        <div class="auth-header">
+            <i class="fas fa-seedling"></i>
+            <h1>Регистрация</h1>
         </div>
         
+        <form id="registerForm">
+            <div class="form-group">
+                <input type="text" id="registerName" placeholder="Имя" required>
+            </div>
+            <div class="form-group">
+                <input type="email" id="registerEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="registerPassword" placeholder="Пароль (минимум 6 символов)" required>
+            </div>
+            <button type="submit" class="auth-btn">Зарегистрироваться</button>
+        </form>
+        
+        <div class="auth-links">
+            Уже есть аккаунт? <a href="login.html">Войти</a>
+        </div>
         <div class="back-link">
-            <a href="index.html"><i class="fas fa-arrow-left"></i> Вернуться на главную</a>
+            <a href="index.html">← На главную</a>
         </div>
     </div>
 
-    <!-- Подключение Firebase -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="script.js"></script>
+    <script src="https://kit.fontawesome.com/your-code.js"></script>
     
     <script>
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = event.target;
+        // Firebase настройки
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYTCaAyGSpUFu6-jKDn_wx_Xl7mP4lG68",
+            authDomain: "helpingplantsai.firebaseapp.com",
+            projectId: "helpingplantsai",
+            storageBucket: "helpingplantsai.firebasestorage.app",
+            messagingSenderId: "822289586033",
+            appId: "1:822289586033:web:d13cf75c8d9628b9d048d0"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Регистрация
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-        
-        // Проверка сложности пароля
-        document.getElementById('registerPassword').addEventListener('input', function() {
-            const password = this.value;
-            const strengthBar = document.getElementById('strengthBar');
-            const strengthText = document.getElementById('strengthText');
-            
-            let strength = 0;
-            
-            if (password.length >= 6) strength += 25;
-            if (password.match(/[a-z]+/)) strength += 25;
-            if (password.match(/[A-Z]+/)) strength += 25;
-            if (password.match(/[0-9]+/)) strength += 25;
-            
-            strengthBar.style.width = strength + '%';
-            
-            if (strength <= 25) {
-                strengthBar.style.background = '#ef4444';
-                strengthText.textContent = 'Слабый пароль';
-            } else if (strength <= 50) {
-                strengthBar.style.background = '#f59e0b';
-                strengthText.textContent = 'Средний пароль';
-            } else if (strength <= 75) {
-                strengthBar.style.background = '#3b82f6';
-                strengthText.textContent = 'Хороший пароль';
-            } else {
-                strengthBar.style.background = '#10b981';
-                strengthText.textContent = 'Надёжный пароль';
-            }
-        });
-        
-        // Проверка совпадения паролей
-        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
-            const confirm = this.value;
-            const matchDiv = document.getElementById('passwordMatch');
             
-            if (password !== confirm) {
-                matchDiv.style.display = 'block';
-            } else {
-                matchDiv.style.display = 'none';
-            }
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(function(userCredential) {
+                    return userCredential.user.updateProfile({
+                        displayName: name
+                    });
+                })
+                .then(function() {
+                    alert('Регистрация успешна!');
+                    window.location.href = 'index.html';
+                })
+                .catch(function(error) {
+                    alert('Ошибка: ' + error.message);
+                });
         });
     </script>
 </body>
