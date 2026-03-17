@@ -442,10 +442,9 @@ function saveToHistory() {
         }, 200);
     }
 }
-// ПРОСТАЯ РАБОЧАЯ ЗАГРУЗКА ФАЙЛОВ
-// Инициализация загрузки изображений
+// ЗАГРУЗКА ИЗОБРАЖЕНИЙ
 function initializeImageUpload() {
-    console.log("Запуск загрузчика...");
+    console.log("Загрузчик запущен");
     
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
@@ -460,15 +459,26 @@ function initializeImageUpload() {
     
     if (!uploadArea || !fileInput) return;
     
-    // Делаем область кликабельной
+    // Эффекты при наведении
+    uploadArea.addEventListener('mouseenter', () => {
+        uploadArea.style.transform = 'scale(1.02)';
+        uploadArea.style.borderColor = '#10b981';
+        uploadArea.style.backgroundColor = '#f0fdf4';
+        uploadArea.style.transition = 'all 0.3s ease';
+    });
+    
+    uploadArea.addEventListener('mouseleave', () => {
+        uploadArea.style.transform = 'scale(1)';
+        uploadArea.style.borderColor = '#e5e7eb';
+        uploadArea.style.backgroundColor = '#f9fafb';
+    });
+    
     uploadArea.addEventListener('click', () => fileInput.click());
     
-    // Обработка выбора файла
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
         
-        // Проверка на изображение
         if (!file.type.startsWith('image/')) {
             alert('Пожалуйста, выберите изображение');
             return;
@@ -480,23 +490,26 @@ function initializeImageUpload() {
             imagePreview.style.display = 'block';
             uploadArea.style.display = 'none';
             
-            // ПОКАЗЫВАЕМ ПРОГРЕСС-БАР
+            // Показываем прогресс
             uploadProgress.style.display = 'block';
             resultCard.style.display = 'none';
             
-            // АНИМАЦИЯ ЗАГРУЗКИ - 3 СЕКУНДЫ
+            // Анимация загрузки
             let progress = 0;
-            const totalTime = 3000; // 3 секунды
-            const interval = 100; // обновление каждые 100мс
+            const totalTime = 3000;
+            const interval = 50;
             const step = (interval / totalTime) * 100;
             
-            // Тексты для смены
+            // Статусы загрузки
             const statusTexts = [
-                { progress: 30, text: '🔍 Анализ изображения...' },
-                { progress: 60, text: '🌱 Поиск в базе растений...' },
-                { progress: 90, text: '✨ Формирование рекомендаций...' },
-                { progress: 100, text: '✅ РАСТЕНИЕ ОПРЕДЕЛЕНО!' }
+                { progress: 0, text: 'Запуск анализа...' },
+                { progress: 25, text: 'Анализ изображения...' },
+                { progress: 50, text: 'Поиск в базе данных...' },
+                { progress: 75, text: 'Формирование рекомендаций...' },
+                { progress: 95, text: 'Завершение...' }
             ];
+            
+            let currentStatusIndex = 0;
             
             const timer = setInterval(() => {
                 progress += step;
@@ -505,46 +518,65 @@ function initializeImageUpload() {
                     progress = 100;
                     clearInterval(timer);
                     
-                    // Скрываем прогресс, показываем результат
+                    progressStatusText.textContent = 'Готово!';
+                    
                     setTimeout(() => {
                         uploadProgress.style.display = 'none';
                         resultCard.style.display = 'block';
                         
-                        // Данные о Циннии
+                        // Плавное появление результата
+                        resultCard.style.animation = 'fadeIn 0.5s ease';
+                        
+                        // Данные о растении
                         document.getElementById('plantName').textContent = 'Цинния (Zinnia elegans)';
                         document.getElementById('plantConfidence').textContent = 'Точность: 99%';
-                        document.getElementById('plantCareText').textContent = 'Яркое солнце, полив умеренный, не заливать. Цветет все лето.';
-                        document.getElementById('lightInfo').textContent = 'Яркое солнце';
-                        document.getElementById('waterInfo').textContent = 'Умеренный, раз в 3 дня';
-                        document.getElementById('tempInfo').textContent = '20-25°C';
+                        document.getElementById('plantCareText').textContent = 'Яркое солнце, полив умеренный под корень. Цветет с июня по октябрь.';
+                        document.getElementById('lightInfo').textContent = '☀️ Яркое солнце';
+                        document.getElementById('waterInfo').textContent = '💧 Умеренный, раз в 3 дня';
+                        document.getElementById('tempInfo').textContent = '🌡️ 20-28°C';
                         document.getElementById('familyInfo').textContent = 'Астровые';
                         document.getElementById('soilInfo').textContent = 'Плодородная, рыхлая';
                         
-                        // Добавляем здоровье
+                        // Информация о здоровье
                         const extraInfo = document.getElementById('plantExtraInfo');
                         if (extraInfo) {
                             extraInfo.innerHTML = `
-                                <div class="info-item" style="background: #f0fdf4; padding: 10px; border-radius: 8px; grid-column: span 3;">
-                                    <i class="fas fa-heartbeat" style="color: #10b981;"></i>
-                                    <span><strong>Здоровье:</strong> Отличное! Растение здорово</span>
+                                <div class="info-item" style="background: #f0fdf4; padding: 15px; border-radius: 10px; grid-column: span 3; border-left: 4px solid #10b981;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <i class="fas fa-heartbeat" style="color: #10b981; font-size: 24px;"></i>
+                                        <div>
+                                            <div style="font-weight: 600; color: #10b981;">Здоровье: Отличное</div>
+                                            <div style="color: #065f46;">Растение здорово, листья без пятен</div>
+                                        </div>
+                                    </div>
                                 </div>
                             `;
                         }
                         
-                        // Уведомление
-                        showNotification('✅ Цинния успешно определена!', 'success');
+                        showNotification('Растение определено!', 'success');
                     }, 500);
                 }
                 
-                // Обновляем прогресс-бар
-                if (progressFill) progressFill.style.width = progress + '%';
+                // Обновление прогресс-бара
+                if (progressFill) {
+                    progressFill.style.width = progress + '%';
+                    
+                    // Градиент прогресса
+                    if (progress < 30) progressFill.style.background = '#3b82f6';
+                    else if (progress < 60) progressFill.style.background = '#8b5cf6';
+                    else if (progress < 90) progressFill.style.background = '#ec4899';
+                    else progressFill.style.background = '#10b981';
+                }
+                
                 if (progressPercent) progressPercent.textContent = Math.round(progress) + '%';
                 
-                // Меняем текст в зависимости от прогресса
-                for (let i = 0; i < statusTexts.length; i++) {
-                    if (progress <= statusTexts[i].progress) {
-                        if (progressStatusText) progressStatusText.textContent = statusTexts[i].text;
-                        break;
+                // Обновление текста статуса
+                for (let i = currentStatusIndex; i < statusTexts.length; i++) {
+                    if (progress >= statusTexts[i].progress) {
+                        if (progressStatusText) {
+                            progressStatusText.textContent = statusTexts[i].text;
+                        }
+                        currentStatusIndex = i;
                     }
                 }
                 
@@ -562,22 +594,32 @@ function initializeImageUpload() {
             uploadProgress.style.display = 'none';
             resultCard.style.display = 'none';
             fileInput.value = '';
+            
+            // Сброс анимаций
+            uploadArea.style.transform = 'scale(1)';
         });
     }
     
     // Drag and drop
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
-        uploadArea.classList.add('dragover');
+        uploadArea.style.borderColor = '#10b981';
+        uploadArea.style.backgroundColor = '#f0fdf4';
+        uploadArea.style.transform = 'scale(1.02)';
     });
     
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#e5e7eb';
+        uploadArea.style.backgroundColor = '#f9fafb';
+        uploadArea.style.transform = 'scale(1)';
     });
     
     uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
-        uploadArea.classList.remove('dragover');
+        uploadArea.style.borderColor = '#e5e7eb';
+        uploadArea.style.backgroundColor = '#f9fafb';
+        uploadArea.style.transform = 'scale(1)';
         
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
@@ -587,7 +629,6 @@ function initializeImageUpload() {
         }
     });
 }
-    
 };
 
 // ============================================
