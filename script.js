@@ -443,6 +443,7 @@ function saveToHistory() {
     }
 }
 // ЗАГРУЗКА ИЗОБРАЖЕНИЙ
+// ЗАГРУЗКА ИЗОБРАЖЕНИЙ
 function initializeImageUpload() {
     console.log("Загрузчик запущен");
     
