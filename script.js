@@ -392,135 +392,107 @@ window.deleteHistoryItem = function(id) {
     localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
     loadHistory();
     showNotification('Удалено', 'info');
-// Инициализация загрузки изображений - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// ПРОСТАЯ РАБОЧАЯ ЗАГРУЗКА ФАЙЛОВ
 function initializeImageUpload() {
-    console.log("Инициализация загрузки...");
+    console.log("Запуск загрузчика...");
     
-    const uploadArea = document.getElementById('uploadArea');
+    // Находим элементы
     const fileInput = document.getElementById('fileInput');
-    const imagePreview = document.getElementById('imagePreview');
+    const uploadArea = document.getElementById('uploadArea');
     const previewImage = document.getElementById('previewImage');
+    const imagePreview = document.getElementById('imagePreview');
     const removePreviewBtn = document.getElementById('removePreviewBtn');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const resultCard = document.getElementById('resultCard');
     
-    if (!uploadArea || !fileInput) {
-        console.log("Элементы не найдены!");
+    // Проверяем, нашли ли элементы
+    if (!fileInput) {
+        console.log("ОШИБКА: Не найден fileInput!");
         return;
     }
     
-    console.log("Элементы найдены, добавляем обработчики...");
-    
-    // КЛИК ПО ВСЕЙ ОБЛАСТИ ЗАГРУЗКИ
-    uploadArea.addEventListener('click', function() {
-        console.log("Клик по области загрузки");
-        fileInput.click();
-    });
-    
-    // ИЛИ если есть отдельная кнопка
-    const selectFileBtn = document.getElementById('selectFileBtn');
-    if (selectFileBtn) {
-        selectFileBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            console.log("Клик по кнопке выбора файла");
-            fileInput.click();
-        });
+    if (!uploadArea) {
+        console.log("ОШИБКА: Не найден uploadArea!");
+        return;
     }
     
-    // ОБРАБОТКА ВЫБОРА ФАЙЛА
-    fileInput.addEventListener('change', function(e) {
-        console.log("Файл выбран");
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if (previewImage) previewImage.src = e.target.result;
-                if (imagePreview) imagePreview.style.display = 'block';
-                if (uploadArea) uploadArea.style.display = 'none';
-                
-                // Показываем прогресс
-                if (uploadProgress) uploadProgress.style.display = 'block';
-                
-                // Симуляция анализа
-                let progress = 0;
-                const interval = setInterval(function() {
-                    progress += 10;
-                    
-                    const progressFill = document.getElementById('progressFill');
-                    const progressPercent = document.getElementById('progressPercent');
-                    
-                    if (progressFill) progressFill.style.width = progress + '%';
-                    if (progressPercent) progressPercent.textContent = progress + '%';
-                    
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        if (uploadProgress) uploadProgress.style.display = 'none';
-                        if (resultCard) resultCard.style.display = 'block';
-                        
-                        // Данные о Циннии
-                        document.getElementById('plantName').textContent = 'Цинния (Zinnia elegans)';
-                        document.getElementById('plantConfidence').textContent = 'Точность: 99%';
-                        document.getElementById('plantCareText').textContent = 'Яркое солнечное место, полив умеренный под корень. Для пышного цветения удаляйте отцветшие соцветия.';
-                        document.getElementById('lightInfo').textContent = 'Яркое солнце';
-                        document.getElementById('waterInfo').textContent = 'Умеренный, раз в 3-4 дня';
-                        document.getElementById('tempInfo').textContent = '20-28°C';
-                        document.getElementById('familyInfo').textContent = 'Астровые';
-                        document.getElementById('soilInfo').textContent = 'Плодородная, рыхлая';
-                        
-                        // Добавляем здоровье
-                        const extraInfo = document.getElementById('plantExtraInfo');
-                        if (extraInfo) {
-                            extraInfo.innerHTML = `
-                                <div class="info-item" style="border-left: 4px solid #10b981;">
-                                    <i class="fas fa-heartbeat" style="color: #10b981;"></i>
-                                    <span>Здоровье: <strong style="color: #10b981;">Здорова</strong></span>
-                                </div>
-                                <div class="info-item">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    <span>Цветение: <strong>Июнь - Октябрь</strong></span>
-                                </div>
-                            `;
-                        }
-                    }
-                }, 200);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+    console.log("Элементы найдены, добавляем обработчики");
     
-    // Удаление превью
+    // Делаем всю область кликабельной
+    uploadArea.style.cursor = 'pointer';
+    
+    // 1. КЛИК ПО ОБЛАСТИ
+    uploadArea.onclick = function() {
+        console.log("Клик по области");
+        fileInput.click();
+    };
+    
+    // 2. ИЗМЕНЕНИЕ ФАЙЛА
+    fileInput.onchange = function(event) {
+        console.log("Файл выбран");
+        
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Проверяем, что это картинка
+        if (!file.type.startsWith('image/')) {
+            alert('Пожалуйста, выберите изображение');
+            return;
+        }
+        
+        // Читаем файл
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            console.log("Файл загружен");
+            
+            // Показываем превью
+            if (previewImage) previewImage.src = e.target.result;
+            if (imagePreview) imagePreview.style.display = 'block';
+            if (uploadArea) uploadArea.style.display = 'none';
+            
+            // Показываем результат с Циннией
+            setTimeout(function() {
+                const resultCard = document.getElementById('resultCard');
+                if (resultCard) {
+                    resultCard.style.display = 'block';
+                    
+                    // Заполняем данные о Циннии
+                    document.getElementById('plantName').textContent = 'Цинния (Zinnia)';
+                    document.getElementById('plantConfidence').textContent = 'Точность: 99%';
+                    document.getElementById('plantCareText').textContent = 'Яркое солнце, полив умеренный, не заливать. Цветет все лето.';
+                    document.getElementById('lightInfo').textContent = 'Яркое солнце';
+                    document.getElementById('waterInfo').textContent = 'Умеренный полив';
+                    document.getElementById('tempInfo').textContent = '20-25°C';
+                    document.getElementById('familyInfo').textContent = 'Астровые';
+                    document.getElementById('soilInfo').textContent = 'Плодородная почва';
+                    
+                    // Добавляем здоровье
+                    const extraInfo = document.getElementById('plantExtraInfo');
+                    if (extraInfo) {
+                        extraInfo.innerHTML = `
+                            <div class="info-item" style="background: #f0fdf4; padding: 10px; border-radius: 8px;">
+                                <i class="fas fa-heartbeat" style="color: #10b981;"></i>
+                                <span>Здоровье: <strong style="color: #10b981;">Здорова</strong></span>
+                            </div>
+                        `;
+                    }
+                }
+            }, 1000);
+        };
+        
+        reader.readAsDataURL(file);
+    };
+    
+    // 3. УДАЛЕНИЕ ПРЕВЬЮ
     if (removePreviewBtn) {
-        removePreviewBtn.addEventListener('click', function() {
+        removePreviewBtn.onclick = function() {
             console.log("Удаление превью");
             if (imagePreview) imagePreview.style.display = 'none';
             if (uploadArea) uploadArea.style.display = 'block';
-            if (resultCard) resultCard.style.display = 'none';
-            if (uploadProgress) uploadProgress.style.display = 'none';
             fileInput.value = '';
-        });
+            
+            const resultCard = document.getElementById('resultCard');
+            if (resultCard) resultCard.style.display = 'none';
+        };
     }
-    
-    // Drag and drop
-    uploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', function() {
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            fileInput.files = e.dataTransfer.files;
-            const event = new Event('change');
-            fileInput.dispatchEvent(event);
-        }
-    });
 }
 };
 
