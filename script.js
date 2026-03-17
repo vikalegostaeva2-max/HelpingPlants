@@ -128,18 +128,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // КНОПКА СОХРАНИТЬ РЕЗУЛЬТАТ
-    const saveBtn = document.getElementById('saveResultBtn');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', function() {
-            // ВАША АНИМАЦИЯ
-            this.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                this.style.transform = '';
-                saveToHistory();
-            }, 200);
-        });
-    }
+  // КНОПКА СОХРАНИТЬ РЕЗУЛЬТАТ
+const saveBtn = document.getElementById('saveResultBtn');
+if (saveBtn) {
+    console.log("Кнопка сохранения найдена");
+    saveBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        saveToHistory();
+    });
+}
 });
 
 // ============================================
@@ -392,6 +389,59 @@ window.deleteHistoryItem = function(id) {
     localStorage.setItem(`history_${currentUser.uid}`, JSON.stringify(recognitionHistory));
     loadHistory();
     showNotification('Удалено', 'info');
+    // ============================================
+// СОХРАНЕНИЕ В ИСТОРИЮ (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+// ============================================
+function saveToHistory() {
+    console.log("Сохраняем в историю...");
+    
+    // Получаем данные растения
+    const plantName = document.getElementById('plantName').textContent;
+    const plantConfidence = document.getElementById('plantConfidence').textContent;
+    const previewImage = document.getElementById('previewImage');
+    const resultCard = document.getElementById('resultCard');
+    
+    // Проверяем, есть ли результат
+    if (!resultCard || resultCard.style.display !== 'block') {
+        alert('❌ Сначала проанализируйте растение');
+        return;
+    }
+    
+    if (!plantName || plantName === 'Одуванчик обыкновенный') {
+        alert('❌ Сначала проанализируйте растение');
+        return;
+    }
+    
+    // Создаем запись
+    const result = {
+        id: Date.now(),
+        plantName: plantName,
+        confidence: plantConfidence,
+        date: new Date().toLocaleString(),
+        image: previewImage && previewImage.src ? previewImage.src : ''
+    };
+    
+    console.log("Сохраняем:", result);
+    
+    // Получаем существующую историю
+    let history = JSON.parse(localStorage.getItem('recognitionHistory') || '[]');
+    history.unshift(result);
+    
+    // Сохраняем обратно
+    localStorage.setItem('recognitionHistory', JSON.stringify(history));
+    
+    // Показываем уведомление
+    alert('✅ Растение сохранено в историю!');
+    
+    // Анимация кнопки
+    const btn = event ? event.target : document.getElementById('saveResultBtn');
+    if (btn) {
+        btn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            btn.style.transform = '';
+        }, 200);
+    }
+}
 // ПРОСТАЯ РАБОЧАЯ ЗАГРУЗКА ФАЙЛОВ
 // Инициализация загрузки изображений
 function initializeImageUpload() {
