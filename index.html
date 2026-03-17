@@ -124,29 +124,21 @@
                 <!-- Левая колонка -->
                 <div class="left-column">
                     <!-- Блок распознавания растений -->
-                    <section class="card identification-card" id="identification">
-                        <div class="card-header">
-                            <h2><i class="fas fa-camera"></i> Распознавание растений</h2>
-                            <div class="card-subtitle">Загрузите фото растения</div>
-                        </div>
-                        
-                        <div class="upload-area" id="uploadArea">
-                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                            <p class="upload-text">Перетащите изображение сюда или нажмите для выбора</p>
-                            <button class="btn-select-file" id="selectFileBtn">
-                                <i class="fas fa-folder-open"></i> Выбрать файл
-                            </button>
-                            <p class="file-info">Поддерживаются: JPG, PNG, размер до 10MB</p>
-                            <input type="file" id="fileInput" accept="image/*" hidden>
-                        </div>
+                   <!-- Блок загрузки изображения -->
+<div class="upload-area" id="uploadArea" style="cursor: pointer; text-align: center; padding: 40px; border: 2px dashed #ccc; border-radius: 10px;">
+    <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #10b981;"></i>
+    <p style="margin: 10px 0;">Нажмите, чтобы выбрать фото Циннии</p>
+    <p style="font-size: 12px; color: #666;">Поддерживаются JPG, PNG</p>
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+</div>
 
-                        <!-- Предпросмотр изображения -->
-                        <div class="image-preview" id="imagePreview" style="display: none;">
-                            <img id="previewImage" src="" alt="Предпросмотр">
-                            <button class="btn-remove-preview" id="removePreviewBtn">
-                                <i class="fas fa-times"></i> Удалить
-                            </button>
-                        </div>
+<!-- Превью изображения (скрыто) -->
+<div class="image-preview" id="imagePreview" style="display: none; text-align: center;">
+    <img id="previewImage" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 10px;">
+    <button id="removePreviewBtn" style="margin-top: 10px; padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        <i class="fas fa-times"></i> Удалить
+    </button>
+</div>
 
                         <!-- Прогресс загрузки -->
                         <div class="upload-progress" id="uploadProgress">
