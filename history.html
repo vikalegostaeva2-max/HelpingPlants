@@ -1,58 +1,337 @@
-<script>
-    // Загружаем историю при открытии страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("Загружаем историю...");
-        
-        const historyList = document.getElementById('historyList');
-        
-        // СОЗДАЕМ ТЕСТОВУЮ ИСТОРИЮ С ЦИННИЕЙ
-        const demoHistory = [
-            {
-                id: 1,
-                plantName: '🌼 Цинния',
-                confidence: 'Точность: 99%',
-                image: 'https://images.unsplash.com/photo-1504198458649-3128b932f49e?w=400'
-            },
-        ];
-        
-        // СОХРАНЯЕМ В LOCALSTORAGE (чтобы потом добавлялись новые)
-        localStorage.setItem('recognitionHistory', JSON.stringify(demoHistory));
-        
-        // ПОКАЗЫВАЕМ ИСТОРИЮ
-        historyList.innerHTML = demoHistory.map(item => `
-            <div class="history-item">
-                <img src="${item.image}" 
-                     alt="${item.plantName}"
-                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px;">
-                <div style="flex: 1;">
-                    <h3 style="margin: 0 0 5px 0; color: #333;">${item.plantName}</h3>
-                    <p style="margin: 0 0 5px 0; color: #10b981;">${item.confidence}</p>
-                    <p style="margin: 0; color: #666; font-size: 12px;">${item.date}</p>
-                </div>
-                <button onclick="deleteFromHistory(${item.id})" 
-                        style="background: #fee2e2; color: #ef4444; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `).join('');
-    });
-    
-    // Функция удаления из истории
-    window.deleteFromHistory = function(id) {
-        let history = JSON.parse(localStorage.getItem('recognitionHistory') || '[]');
-        history = history.filter(item => item.id !== id);
-        localStorage.setItem('recognitionHistory', JSON.stringify(history));
-        
-        // Если история пуста, показываем сообщение
-        if (history.length === 0) {
-            document.getElementById('historyList').innerHTML = `
-                <div class="empty">
-                    <i class="fas fa-leaf" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
-                    <p>У вас пока нет сохраненных растений</p>
-                </div>
-            `;
-        } else {
-            location.reload(); // Перезагружаем страницу
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История - HelpingPlantsAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    };
-</script>
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 28px;
+        }
+        
+        h1 i {
+            color: #10b981;
+        }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+        
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .plant-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .plant-icon i {
+            font-size: 32px;
+            color: white;
+        }
+        
+        .plant-info {
+            flex: 1;
+        }
+        
+        .plant-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .plant-confidence {
+            color: #10b981;
+            font-size: 14px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-view {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+        
+        .btn-view:hover {
+            background: #0284c7;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        
+        .btn-delete:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            margin-top: 30px;
+            transition: all 0.3s;
+        }
+        
+        .btn-main:hover {
+            background: #059669;
+            transform: translateX(-5px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            color: #d1d5db;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #10b981;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <i class="fas fa-history"></i>
+            История растений
+        </h1>
+        
+        <!-- Статистика -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Всего растений</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">Цинния</div>
+                <div class="stat-label">Частый вид</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">🌱</div>
+                <div class="stat-label">Здоровы</div>
+            </div>
+        </div>
+        
+        <!-- Список истории -->
+        <div class="history-list" id="historyList">
+            <!-- Цинния 1 -->
+            <div class="history-item">
+                <div class="plant-icon">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <div class="plant-info">
+                    <div class="plant-name">🌼 Цинния изящная</div>
+                    <div class="plant-confidence">Точность: 99%</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-view" onclick="viewPlant('Цинния изящная')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-delete" onclick="deletePlant(1)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Цинния 2 -->
+            <div class="history-item">
+                <div class="plant-icon">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <div class="plant-info">
+                    <div class="plant-name">🌼 Цинния "Далия"</div>
+                    <div class="plant-confidence">Точность: 97%</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-view" onclick="viewPlant('Цинния Далия')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-delete" onclick="deletePlant(2)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Цинния 3 -->
+            <div class="history-item">
+                <div class="plant-icon">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <div class="plant-info">
+                    <div class="plant-name">🌼 Цинния</div>
+                    <div class="plant-confidence">Точность: 98%</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-view" onclick="viewPlant('Цинния Лилипут')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-delete" onclick="deletePlant(3)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Кнопка на главную -->
+        <div style="text-align: center;">
+            <a href="index.html" class="btn-main">
+                <i class="fas fa-arrow-left"></i>
+                На главную
+            </a>
+        </div>
+    </div>
+    
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/your-code.js"></script>
+    
+    <script>
+        // Функция просмотра растения
+        function viewPlant(name) {
+            alert(`🌼 ${name}\n\nЗдоровье: Отличное\nСовет: Яркое солнце, полив умеренный`);
+        }
+        
+        // Функция удаления
+        function deletePlant(id) {
+            if (confirm('Удалить из истории?')) {
+                const item = event.target.closest('.history-item');
+                if (item) {
+                    item.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        item.remove();
+                        
+                        // Проверяем, остались ли элементы
+                        const list = document.getElementById('historyList');
+                        if (list.children.length === 0) {
+                            list.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="fas fa-leaf"></i>
+                                    <p>История пуста</p>
+                                </div>
+                            `;
+                        }
+                        
+                        // Обновляем статистику
+                        updateStats();
+                    }, 300);
+                }
+            }
+        }
+        
+        // Обновление статистики
+        function updateStats() {
+            const count = document.getElementById('historyList').children.length;
+            const statValue = document.querySelector('.stat-value');
+            if (statValue) {
+                statValue.textContent = count;
+            }
+        }
+        
+        // Добавляем анимацию
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateX(0); }
+                to { opacity: 0; transform: translateX(50px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
