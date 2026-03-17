@@ -444,6 +444,7 @@ function saveToHistory() {
 }
 // ЗАГРУЗКА ИЗОБРАЖЕНИЙ
 // ЗАГРУЗКА ИЗОБРАЖЕНИЙ
+// ЗАГРУЗКА ИЗОБРАЖЕНИЙ
 function initializeImageUpload() {
     console.log("Загрузчик запущен");
     
@@ -501,13 +502,13 @@ function initializeImageUpload() {
             const interval = 50;
             const step = (interval / totalTime) * 100;
             
-            // Статусы загрузки
+            // СТАТУСЫ ЗАГРУЗКИ (БЕЗ "ИДЕНТИФИКАЦИЯ")
             const statusTexts = [
-                { progress: 0, text: 'Запуск анализа...' },
-                { progress: 25, text: 'Анализ изображения...' },
-                { progress: 50, text: 'Поиск в базе данных...' },
-                { progress: 75, text: 'Формирование рекомендаций...' },
-                { progress: 95, text: 'Завершение...' }
+                { progress: 0, text: 'Загрузка...' },
+                { progress: 25, text: 'Обработка...' },
+                { progress: 50, text: 'Анализ...' },
+                { progress: 75, text: 'Проверка...' },
+                { progress: 95, text: 'Почти готово...' }
             ];
             
             let currentStatusIndex = 0;
@@ -547,7 +548,7 @@ function initializeImageUpload() {
                                         <i class="fas fa-heartbeat" style="color: #10b981; font-size: 24px;"></i>
                                         <div>
                                             <div style="font-weight: 600; color: #10b981;">Здоровье: Отличное</div>
-                                            <div style="color: #065f46;">Растение здорово, листья без пятен</div>
+                                            <div style="color: #065f46;">Растение здорово</div>
                                         </div>
                                     </div>
                                 </div>
@@ -630,7 +631,6 @@ function initializeImageUpload() {
         }
     });
 }
-};
 
 // ============================================
 // ВАШИ ОСТАЛЬНЫЕ ФУНКЦИИ (Сенсоры, графики и т.д.)
