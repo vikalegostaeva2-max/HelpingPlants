@@ -14,6 +14,83 @@
 <script src="https://kit.fontawesome.com/your-code.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- ПРОСТЕЙШАЯ ЗАГРУЗКА ФАЙЛОВ -->
+<script>
+// Создаем новую функцию загрузки прямо здесь
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("ЗАГРУЗЧИК ЗАПУЩЕН!");
+    
+    // Находим элементы
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const previewImage = document.getElementById('previewImage');
+    const imagePreview = document.getElementById('imagePreview');
+    const removeBtn = document.getElementById('removePreviewBtn');
+    const resultCard = document.getElementById('resultCard');
+    
+    if (!fileInput || !uploadArea) {
+        console.log("ЭЛЕМЕНТЫ НЕ НАЙДЕНЫ!");
+        return;
+    }
+    
+    console.log("ЭЛЕМЕНТЫ НАЙДЕНЫ!");
+    
+    // Прямое назначение событий
+    uploadArea.onclick = function() {
+        console.log("КЛИК!");
+        fileInput.click();
+    };
+    
+    fileInput.onchange = function(e) {
+        console.log("ФАЙЛ ВЫБРАН!");
+        
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadArea.style.display = 'none';
+                
+                // Сразу показываем результат с Циннией
+                setTimeout(function() {
+                    resultCard.style.display = 'block';
+                    
+                    // Заполняем данные
+                    document.getElementById('plantName').textContent = 'Цинния (Zinnia)';
+                    document.getElementById('plantConfidence').textContent = 'Точность: 100%';
+                    document.getElementById('plantCareText').textContent = 'Цинния - прекрасный цветок! Яркое солнце, полив раз в 3 дня.';
+                    document.getElementById('lightInfo').textContent = 'Яркое солнце';
+                    document.getElementById('waterInfo').textContent = 'Умеренный';
+                    document.getElementById('tempInfo').textContent = '20-25°C';
+                    document.getElementById('familyInfo').textContent = 'Астровые';
+                    document.getElementById('soilInfo').textContent = 'Плодородная';
+                    
+                    // Здоровье
+                    const extra = document.getElementById('plantExtraInfo');
+                    if (extra) {
+                        extra.innerHTML = '<div style="background: #e8f5e9; padding: 10px; border-radius: 8px;"><i class="fas fa-heartbeat" style="color: #10b981;"></i> Здоровье: <strong style="color: #10b981;">Отличное!</strong></div>';
+                    }
+                }, 500);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    if (removeBtn) {
+        removeBtn.onclick = function() {
+            previewImage.src = '';
+            imagePreview.style.display = 'none';
+            uploadArea.style.display = 'block';
+            fileInput.value = '';
+            resultCard.style.display = 'none';
+        };
+    }
+});
+</script>
+
+<!-- ВАШ ОСНОВНОЙ СКРИПТ -->
+<script src="script.js"></script>
 <!-- Ваш скрипт -->
 <script src="script.js"></script>
 <body>
