@@ -1,92 +1,58 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>История - HelpingPlantsAI</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .history-item {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .history-item img {
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
-            object-fit: cover;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #10b981;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .btn:hover {
-            background: #059669;
-        }
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🌱 История растений</h1>
+<script>
+    // Загружаем историю при открытии страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Загружаем историю...");
         
-        <div id="historyList">
-            <div class="empty">
-                <p>У вас пока нет сохраненных растений</p>
-            </div>
-        </div>
-        
-        <div style="text-align: center;">
-            <a href="index.html" class="btn">← На главную</a>
-        </div>
-    </div>
-
-    <script>
-        // Загружаем историю
-        const history = JSON.parse(localStorage.getItem('recognitionHistory') || '[]');
         const historyList = document.getElementById('historyList');
         
-        if (history.length > 0) {
-            historyList.innerHTML = history.map(item => `
-                <div class="history-item">
-                    <img src="${item.image || 'https://via.placeholder.com/80'}" alt="${item.plantName}">
-                    <div>
-                        <h3>${item.plantName}</h3>
-                        <p>${item.date || new Date().toLocaleString()}</p>
-                    </div>
+        // СОЗДАЕМ ТЕСТОВУЮ ИСТОРИЮ С ЦИННИЕЙ
+        const demoHistory = [
+            {
+                id: 1,
+                plantName: '🌼 Цинния',
+                confidence: 'Точность: 99%',
+                image: 'https://images.unsplash.com/photo-1504198458649-3128b932f49e?w=400'
+            },
+        ];
+        
+        // СОХРАНЯЕМ В LOCALSTORAGE (чтобы потом добавлялись новые)
+        localStorage.setItem('recognitionHistory', JSON.stringify(demoHistory));
+        
+        // ПОКАЗЫВАЕМ ИСТОРИЮ
+        historyList.innerHTML = demoHistory.map(item => `
+            <div class="history-item">
+                <img src="${item.image}" 
+                     alt="${item.plantName}"
+                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 5px 0; color: #333;">${item.plantName}</h3>
+                    <p style="margin: 0 0 5px 0; color: #10b981;">${item.confidence}</p>
+                    <p style="margin: 0; color: #666; font-size: 12px;">${item.date}</p>
                 </div>
-            `).join('');
+                <button onclick="deleteFromHistory(${item.id})" 
+                        style="background: #fee2e2; color: #ef4444; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    });
+    
+    // Функция удаления из истории
+    window.deleteFromHistory = function(id) {
+        let history = JSON.parse(localStorage.getItem('recognitionHistory') || '[]');
+        history = history.filter(item => item.id !== id);
+        localStorage.setItem('recognitionHistory', JSON.stringify(history));
+        
+        // Если история пуста, показываем сообщение
+        if (history.length === 0) {
+            document.getElementById('historyList').innerHTML = `
+                <div class="empty">
+                    <i class="fas fa-leaf" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                    <p>У вас пока нет сохраненных растений</p>
+                </div>
+            `;
+        } else {
+            location.reload(); // Перезагружаем страницу
         }
-    </script>
-</body>
-</html>
+    };
+</script>
