@@ -176,7 +176,10 @@ function saveToHistory() {
 // ============================================
 // ЗАГРУЗКА ФАЙЛОВ
 // ============================================
+// ЗАГРУЗКА ФОТО (РАБОТАЕТ НА ТЕЛЕФОНЕ)
 function initializeImageUpload() {
+    console.log("Загрузчик запущен");
+    
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
     const previewImage = document.getElementById('previewImage');
@@ -186,11 +189,37 @@ function initializeImageUpload() {
     
     if (!uploadArea || !fileInput) return;
     
-    uploadArea.addEventListener('click', () => fileInput.click());
+    // Для телефона - используем touch события
+    uploadArea.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        this.style.transform = 'scale(0.98)';
+        this.style.backgroundColor = '#e0f2e9';
+    });
     
+    uploadArea.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        this.style.transform = 'scale(1)';
+        this.style.backgroundColor = '#f9fafb';
+        fileInput.click();
+    });
+    
+    // Для компьютера
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    // Обработка выбора файла
     fileInput.addEventListener('change', function(e) {
+        e.preventDefault();
+        
         const file = e.target.files[0];
         if (!file) return;
+        
+        // Проверка на изображение
+        if (!file.type.startsWith('image/')) {
+            alert('Пожалуйста, выберите изображение');
+            return;
+        }
         
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -198,23 +227,36 @@ function initializeImageUpload() {
             imagePreview.style.display = 'block';
             uploadArea.style.display = 'none';
             
+            // Показываем результат через 1.5 секунды
             setTimeout(() => {
                 resultCard.style.display = 'block';
                 
-                // Цинния
+                // Данные о Циннии
                 document.getElementById('plantName').textContent = '🌼 Цинния (Zinnia)';
                 document.getElementById('plantConfidence').textContent = 'Точность: 99%';
-                document.getElementById('plantCareText').textContent = 'Яркое солнце, полив умеренный';
+                document.getElementById('plantCareText').textContent = 'Яркое солнце, полив умеренный. Цветет все лето.';
                 document.getElementById('lightInfo').textContent = '☀️ Яркое солнце';
-                document.getElementById('waterInfo').textContent = '💧 Умеренный';
+                document.getElementById('waterInfo').textContent = '💧 Умеренный, раз в 3 дня';
                 document.getElementById('tempInfo').textContent = '20-28°C';
                 document.getElementById('familyInfo').textContent = 'Астровые';
-                document.getElementById('soilInfo').textContent = 'Плодородная';
+                document.getElementById('soilInfo').textContent = 'Плодородная, рыхлая';
+                
+                // Здоровье
+                const extraInfo = document.getElementById('plantExtraInfo');
+                if (extraInfo) {
+                    extraInfo.innerHTML = `
+                        <div style="background: #f0fdf4; padding: 15px; border-radius: 10px; grid-column: span 3;">
+                            <i class="fas fa-heartbeat" style="color: #10b981;"></i>
+                            <strong>Здоровье:</strong> Отличное! Растение здорово
+                        </div>
+                    `;
+                }
             }, 1500);
         };
         reader.readAsDataURL(file);
     });
     
+    // Удаление превью
     if (removePreviewBtn) {
         removePreviewBtn.addEventListener('click', function() {
             imagePreview.style.display = 'none';
@@ -222,19 +264,22 @@ function initializeImageUpload() {
             resultCard.style.display = 'none';
             fileInput.value = '';
         });
+        
+        // Для телефона
+        removePreviewBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.style.transform = 'scale(0.95)';
+        });
+        
+        removePreviewBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            this.style.transform = 'scale(1)';
+            imagePreview.style.display = 'none';
+            uploadArea.style.display = 'block';
+            resultCard.style.display = 'none';
+            fileInput.value = '';
+        });
     }
-}
-
-// Запуск при загрузке
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('uploadArea')) {
-        initializeImageUpload();
-    }
-});
-
-// Уведомления
-function showNotification(msg, type) {
-    alert(msg);
 }
 
 // ============================================
