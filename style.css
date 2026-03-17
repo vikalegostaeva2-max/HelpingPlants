@@ -1263,3 +1263,33 @@ input:checked + .slider:before {
 .progress-status i {
     color: #10b981;
 }
+/* Для телефона */
+@media (max-width: 768px) {
+    .upload-area {
+        min-height: 200px;
+        padding: 30px 20px !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .upload-area:active {
+        background-color: #e0f2e9 !important;
+        transform: scale(0.98) !important;
+    }
+    
+    .btn-select-file {
+        padding: 15px 30px !important;
+        font-size: 18px !important;
+    }
+    
+    .image-preview img {
+        max-height: 250px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 15px;
+    }
+    
+    .remove-preview-btn {
+        padding: 12px 25px !important;
+        font-size: 16px !important;
+    }
+}
